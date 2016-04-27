@@ -9,4 +9,6 @@
 
 `src` contient les fichiers `.java` et d'autres fichiers utilisés par le programme.
 
+<br>
+
 Le diaporama de la présentation se trouve à l'adresse (google docs) : 
