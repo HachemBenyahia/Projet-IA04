@@ -13,8 +13,6 @@
 
 Le diaporama de la présentation se trouve à l'adresse (google slides) : 
 
-<br>
-
 https://docs.google.com/presentation/d/1zdrtg446YPckJ8mVfLespbH7-TwmCPQ4mljJr66XAqs/edit?usp=sharing
 
 <br>
