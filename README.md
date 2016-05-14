@@ -1,7 +1,7 @@
 # Projet-IA04
 `doc` contient la Javadoc actuelle du projet.
 
-`idee` contient la description de l'idée du projet.
+`cdc` contient le cahier des charges du projet.
 
 `jar` contient les `.jar` qu'il faut linker au projet.
 
