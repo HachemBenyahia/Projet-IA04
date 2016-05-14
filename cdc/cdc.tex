@@ -83,6 +83,7 @@ Voici une image de ce à quoi cela pourrait ressembler (ce serait donc une captu
 L'architecture se divise en trois parties : les drones qui évoluent dans l'environnement 2D, les objets qui se trouvent sur le terrain, et l'interface graphique qui va représenter tout cela sur l'écran. Ces trois parties sont plus ou moins indépendantes.
 
 \subsection{La classe \protect\Verb+Drone+}
+\subsubsection{Description}
 
 La classe \verb|Drone| est la principale classe à implémenter. En termes de cardinalité, le nombre d'instances de cette classe peut varier de $1$ à $n$.
 
@@ -95,7 +96,7 @@ La liste d'attributs de la classe \verb|Drone| :
 
 \item Un identifiant unique qui peut éventuellement être l'AID du drone.
 
-\item Un statut à définir par la suite, notamment lors des fusion de flotte, il faudra imposer aux drones de ne plus se déplacer et d'ignorer les messages reçus de l'environnement, donc il leur faudra un état particulier qui les mettra en stand-by.
+\item Un état à définir par la suite, notamment lors des fusion de flotte, il faudra imposer aux drones de ne plus se déplacer et d'ignorer les messages reçus de l'environnement, donc il leur faudra un état particulier qui les mettra en stand-by.
 
 \item La prochaine position du drone (calculée en fonction de la position actuelle, de la position objectif, et de l'environnement immédiat).
 
@@ -124,9 +125,83 @@ Le drone doit pouvoir réagir à son environnement de plusieurs manières, dépe
 
 \newpage
 \subsection{La classe \protect\Verb+Display+}
+\subsubsection{Description}
 
-La classe \verb|Display| est une classe indépendante de la classe \verb|Drone|. Son rôle est de rappatrier les positions des drones et de les afficher sur une interface graphique. L'implémentation de classe passe donc par l'utilisation d'une librairie graphique Java. En termes de cardinalité, le nombre d'instances de cette classe est exactement de $1$.
+La classe \verb|Display| est une classe indépendante de la classe \verb|Drone|. Son rôle est de rappatrier les positions des drones et de les afficher sur une interface graphique. L'implémentation de classe passe donc par l'utilisation d'une librairie graphique Java. En termes de cardinalité, le nombre d'instances de cette classe est exactement de $1$. C'est la première classe créée lors du lancement du programme, et elle crée les autres objets dès son démarrage. Elle initialise les position des drones (qui peuvent éventuellement être passées en paramètres) et des objets.
 
 \subsubsection{Attributs}
+
+La liste d'attributs de la classe \verb|Display| :
+
+\begin{enumerate}
+\item Un tableau dynamique (du fait de la suppression possible de drones au cours de l'évolution de la simulation) recensant les drones existants.
+
+\item Le nombre de drones existants.
+
+\item Un tableau dynamique recensant les objets sur le terrain.
+
+\item Le nombre d'objets existants.
+
+\item La dernière représentation graphique calculée (matrice dépendant de la librairie graphique utilisée, paramètre à déterminer).
+\end{enumerate}
+
+\subsubsection{Behaviours}
+
+Voici la liste des behaviours de la classe \verb|Display| :
+
+\begin{enumerate}
+\item Un behaviour qui envoie périodiquement à tous les agents \verb|Drone| une demande de leur position. Il met à jour le tableau de positions.
+
+\item Un behaviour qui reçoit un signal de mort de la part d'une drone, dans ce cas il devra le supprimer de sa liste de drones.
+
+\item Un behaviour qui répond un signal d'arrêt en provenance de la console, il supprimera tous les drones et objets et terminera l'exécution.
+
+\item Un behaviour qui rafraîchit constamment l'interface graphique sur la base des positions actuelles des drones.
+\end{enumerate}
+
+\newpage
+\subsection{La classe \protect\Verb+Object+}
+\subsubsection{Description}
+
+La classe \verb|Object| est facultative. Il faut prioriser le développement des deux classes précédentes. Si les deux classes précédentes sont terminées en avance et que la simulation fonctionne, on peut passer à cette classe. Elle représente les objets qui se trouvent sur le terrain. Les objets sont des polygones. Un objets est un ensemble de points dont les points frontaliers sont ceux qui émettent des messages.
+
+\subsubsection{Attributs}
+
+La liste d'attributs de la classe \verb|Object| :
+
+\begin{enumerate}
+\item Un tableau de points représentant la totalité des points qui le composent.
+
+\item Un identifiant unique.
+\end{enumerate}
+
+\subsubsection{Behaviours}
+
+La liste des behaviours de la classe \verb|Object| :
+
+\begin{enumerate}
+\item Un behaviour qui émet constamment des messages (destinés aux agents) dans les environs de l'objet. Seuls les points frontaliers doivent émettre des messages. Il faudra donc une méthode de classe qui définit la frontière de l'objet.
+
+\item Un behaviour qui renvoie l'ensemble des points le constituant à l'agent \verb|Display| lorsqu'il le lui demande.
+\end{enumerate}
+
+\newpage
+\section{Communication des drones}
+
+Dans cette partie, on va définir les différents cas de figure qui peuvent se présenter dans la vie d'un drone et l'implémentation et les algorithmes qui en découlent. On définira également d'un point de vue technique la nature des messages échangés et l'état des drones au cours de ces situations.
+
+\subsection{Déplacement sans flotte}
+
+\subsection{Crash contre un objet}
+
+\subsection{Croisement d'un drone seul}
+
+\subsection{Croisement d'un drone ayant une flotte}
+
+\subsection{Intégration d'un drone dans une flotte}
+
+\subsection{Fusion de deux flottes}
+
+\subsection{Destruction d'un élément de la flotte}
 
 \end{document}
