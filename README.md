@@ -9,7 +9,7 @@
 
 `rapport` contient le rapport (`.pdf` et `.tex`).
 
-`src` contient les fichiers `.java` et d'autres fichiers utilisés par le programme.
+`src` contient les fichiers `.java` du programme.
 
 'properties' est le fichier de propriétés qu'il faut utiliser pour démarrer le conteneur principal.
 
