@@ -21,7 +21,7 @@ https://openclassrooms.com/courses/presentation-de-bibliotheque-sdl-en-java
 
 Pas besoin de suivre le tutoriel en entier, juste la partie qui explique comment l'installer sous
 Eclipse. <b>Remarque importante :</b> la librairie sdljava est en 32 bits donc il faut télécharger (si
-ce n'est pas déjà le cas) Eclipse 32 bits et non 64 bits. Il faut également utiliser un JRE Java 32 bits.
+ce n'est pas déjà le cas) Eclipse 32 bits et non 64 bits. Il faut également utiliser un JRE 32 bits.
 
 Ces deux outils sont téléchargeables ici :
 
