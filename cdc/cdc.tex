@@ -3,7 +3,6 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[top = 2cm, bottom = 2cm, left = 1cm, right = 1cm]{geometry}
-\usepackage{fancyvrb}
 \usepackage{mathalfa}
 \usepackage{amsfonts}
 \usepackage[table]{xcolor}
@@ -15,6 +14,45 @@
 \usepackage{times}
 \usepackage[hidelinks]{hyperref}
 \usepackage{parskip}
+\usepackage{cprotect}
+\usepackage{fancyvrb}
+
+\definecolor{black}{rgb}{0, 0, 0}
+\definecolor{darkPink}{rgb}{1.0, 0, 1.0}
+\definecolor{darkGreen}{rgb}{0, 0.4, 0}
+
+\lstdefinelanguage{myJava}
+{
+	morecomment=[l]{//},
+	morecomment=[s]{/*}{*/}
+	%morestring=[b]"
+}
+
+\lstset
+{
+	language = {myJava},
+	backgroundcolor=\color{cyan!10},
+	basicstyle=\small\tt,
+	breakatwhitespace=false,
+	breaklines=true,
+	commentstyle=\color{darkGreen},        
+	keepspaces=true,
+	keywordstyle = [1]\color{blue},
+	keywords = [1]{public, void, for},
+	keywordstyle = [2]\color{darkPink},
+	keywords = [2]{System, out, println},
+	keywordstyle = [3]\color{red}, 
+	keywords = [3]{int},  
+	numbers=left,                   
+	numbersep=1em,                  
+	numberstyle=\tiny\color{black},       
+	showspaces=false,                
+	showstringspaces=false,          
+	showtabs=false,           
+	stepnumber=1,              
+	stringstyle = \color{grey!10},    
+	tabsize = 4
+}
 
 \begin{document}
 
@@ -28,7 +66,7 @@
 \tableofcontents
 
 \newpage
-\section{Présentation globale de l'idée}
+\section{\textbf{Présentation globale de l'idée}}
 \subsection{Définition d'un drone}
 
 \textit{Un drone (de l'anglais drone) désigne un aéronef sans pilote à bord. Le drone peut avoir un usage civil ou militaire. [...] Sa taille et masse (de quelques grammes à plusieurs tonnes) dépendent des capacités recherchées. Le pilotage automatique ou à partir du sol permet des vols longs de plusieurs dizaines d'heures (à comparer aux deux heures typiques d'autonomie d'un chasseur).} - Wikipédia :  \textcolor{blue}{\url{https://fr.wikipedia.org/wiki/Drone}}
@@ -77,7 +115,7 @@ Voici une image de ce à quoi cela pourrait ressembler (ce serait donc une captu
 \end{figure}
 
 \clearpage
-\section{Implémentation}
+\section{\textbf{Implémentation}}
 \subsection{Architecture JADE}
 
 L'architecture se divise en trois parties : les drones qui évoluent dans l'environnement 2D, les objets qui se trouvent sur le terrain, et l'interface graphique qui va représenter tout cela sur l'écran. Ces trois parties sont plus ou moins indépendantes.
@@ -186,7 +224,7 @@ La liste des behaviours de la classe \verb|Object| :
 \end{enumerate}
 
 \newpage
-\section{Communication des drones}
+\section{\textbf{Communication des drones}}
 
 Dans cette partie, on va définir les différents cas de figure qui peuvent se présenter dans la vie d'un drone et l'implémentation et les algorithmes qui en découlent. On définira également d'un point de vue technique la nature des messages échangés et l'état des drones au cours de ces situations.
 
@@ -206,4 +244,200 @@ Dans cette partie, on va définir les différents cas de figure qui peuvent se p
 .
 \subsection{Déplacement en flotte}
 .
+
+\newpage
+\section{\textbf{Organisation du code}}
+\subsection{Conventions de nommage et d'écriture}
+
+Pour que la rédaction du code source soit cohérente bien qu'elle soit faite par différents contributeurs, on va définir quelques règles d'écriture.
+
+\subsubsection{La langue}
+
+Toutes les noms de variables, de classes, d'attributs, de méthodes, etc. seront en anglais.
+
+\subsubsection{Les identificateurs}
+
+On n'utilisera des abréviations que lorsque c'est réellement utile (mot trop long). Par exemple, si on attrape une exception, on utilisera de préférence le mot entier \verb|exception| plutôt que simplement \verb|e|. Ceci afin d'éviter qu'on se retrouve avec des noms de variables qui n'ont aucune signification dans le code. Un nom de variable clair peut aider à comprendre le code.
+
+\subsubsection{Les séparateurs}
+
+On utilisera la convention \textbf{CamelCase} et non \textbf{underscore}. Par exemple, au lieu d'écrire \verb|une_variable|, on écrira \verb|uneVariable|.
+
+\subsubsection{Les attributs}
+
+Les attributs de classe doivent être distingués des autres variables afin de ne pas les confondre dans les méthodes. Ils seront tous préfixés de \verb|m_| (pour \textit{member}). Par exemple \verb|m_position|.
+
+\subsubsection{Les classes}
+
+Les noms de classes démarrent par une majuscule, le reste en minuscule, sauf dans le cas des acronymes (sigles) qui ont plusieurs lettre en majuscules.
+
+\subsubsection{Les méthodes}
+
+Les méthodes (et fonctions, mais il n'y en a pas en Java) commenceront par une minuscule afin de ne pas les confondre avec une classe.
+
+\subsubsection{Les variables}
+
+Les variables démarreront par une minuscule.
+
+\subsubsection{Les accolades}
+
+Écrire de préférence : 
+
+~\
+\begin{lstlisting}
+public void method()
+{
+}
+\end{lstlisting}
+
+~\\
+plutôt que :
+
+~\
+\begin{lstlisting}
+public void method(){
+}
+\end{lstlisting}
+
+~\\
+La première version est plus claire, notamment quand plusieurs accolades et indentations s'imbriquent.
+
+\subsubsection{Les espaces}
+
+De préférence (toujours dans un souci de clarté pour que tout le monde en profite et que le code soit rapidement abordable) :
+
+~\
+\begin{lstlisting}
+for(int i = 0 ; i < 10 ; i ++)
+{
+	x = x + ((y * 10) % 3)
+}
+\end{lstlisting}
+
+~\\
+plutôt que :
+
+~\
+\begin{lstlisting}
+for(int i=0;i<10;i++)
+{
+	x=x+((y*10)%3)
+}
+\end{lstlisting}
+
+\subsubsection{Les sauts de lignes}
+
+Le nombre de saut de lignes et leur position est assez subjectif. Viser la clarté et des paquets d'instructions cohérents. Par exemple, il vaut mieux écrire :
+
+~\
+\begin{lstlisting}
+public void method()
+{
+	m_x *= 5;
+	m_y *= 3;
+	
+	for(int i = 0 ; i < 10 ; i ++)
+	{
+		m_x = (m_x * i) % 2;
+		m_y = (m_y * i) % 3;
+		
+		System.out.println(m_x + m_y);
+				
+		if(i == 5)
+			System.out.println("i = 5 !");
+	}
+}
+\end{lstlisting}
+
+~\\
+que :
+
+~\
+\begin{lstlisting}
+public void method()
+{
+	m_x *= 5;
+	m_y *= 3;
+	for(int i = 0 ; i < 10 ; i ++)
+	{
+		m_x = (m_x * i) % 2;
+		m_y = (m_y * i) % 3;
+		System.out.println(m_x + m_y);
+		if(i == 5)
+			System.out.println("i = 5 !");
+	}
+}
+\end{lstlisting}
+
+\subsubsection{Les indentations}
+
+Il faut suivre la logique des \verb|if|, des \verb|for|, etc. Par exemple, il vaut mieux écrire :
+
+~\
+\begin{lstlisting}
+for(int i = 0 ; i < 10 ; i ++)
+{
+	if(i == 5)
+		for(j = 0 ; j < 5 ; i++)
+			if(j == 3)
+				System.out.println("i = 5 et j = 3");
+}
+\end{lstlisting}
+
+~\\
+plutôt que :
+
+~\
+\begin{lstlisting}
+for(int i = 0 ; i < 10 ; i ++)
+{
+	if(i == 5)
+	for(j = 0 ; j < 5 ; i++)
+	if(j == 3)
+	System.out.println("i = 5 et j = 3");
+}
+\end{lstlisting}
+
+~\\
+Il faut également éviter les instructions mono-ligne que certains utilisent parfois mais qui ne servent à rien sinon à rendre la lecture et compréhension du code plus difficile :
+
+~\
+\begin{lstlisting}
+for(int i = 0 ; i < 10 ; i ++){if(i == 5){System.out.println("i = 5 et j = 3");}}
+\end{lstlisting}
+
+\subsection{Commentaires}
+
+Il faut commenter chaque partie de code qui nécessite une explication. Les commentaires seront en français, parce que ce sera plus simple pour tout le monde, surtout si les explications sont complexes.
+
+\subsection{Les constantes}
+
+Il faudra mettre toutes les constantes (comme par exemple le nombre de drones quand on lance le programme,  la taille de la fenêtre graphique, etc.) dans le fichier \verb|Constants|.
+
+\newpage
+\subsection{Description des classes}
+\subsubsection{\protect\Verb+MainContainer+}
+
+C'est le conteneur principal, c'est lui qui contient les agents drones, affichage, etc. Ce conteneur initialise l'agent \verb|Display|, ce dernier prendra la main et créera ensuite les drones (et éventuellement les objets si toute la partie simulation des drones est terminée en avance et fonctionne).
+
+\subsubsection{\protect\Verb+Display+}
+
+C'est la classe qui crée les drones et met à jour l'interface graphique. Elle possède deux behaviours, l'un actualisant l'interface, l'autre allant chercher les positions des drones.
+
+\subsubsection{\protect\Verb+Drone+}
+
+C'est la classe représentant le drone.
+
+\subsubsection{\protect\Verb+Position+}
+
+C'est une classe simple représentant une position $(x, y)$ sur le terrain. En pratique, l'implémentation est telle qu'une position est en fait une cellule d'une grille (le terrain est découpé en cellules, voir les commentaires du code).
+
+\subsubsection{\protect\Verb+Constants+}
+
+Cette classe recense les constantes du programme.
+
+\subsubsection{\protect\Verb+GUI+}
+
+GUI signifie \textit{Graphical User Interface}, c'est la classe qui implémente l'interface graphique. Elle utilise la librairie \textbf{sdljava} (voir sur google). A l'heure où j'écris ces lignes, il y a un problème avec l'interface qui fait qu'elle monopolise toute la JVM quand elle est lancée (et donc empêche les agents de tourner), je vais essayer de voir comment régler ça.
+
 \end{document}
