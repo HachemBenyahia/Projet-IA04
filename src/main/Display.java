@@ -5,7 +5,7 @@ import java.util.Map;
 
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import sdljava.SDLException;
+import jade.wrapper.StaleProxyException;
 
 // l'agent display, qui est en charge de l'affichage et de son actualisation (GUI = Graphical User Interface = interface graphique)
 public class Display extends Agent
@@ -15,11 +15,6 @@ public class Display extends Agent
 	// la map qui contient le nom du drone et sa position (la position est un couple (x,y))
 	// par exemple ["Drone1"] = (232, 105)
 	Map<String, Position> m_drones = new HashMap<String, Position>();
-	
-	// l'attribut de l'interface graphique ; la librairie utilisée est sdljava, qui nécessite que
-	// le code de la gui se trouve dans une classe à part (pas un agent)
-	GUI m_gui = null;
-	
 	
 	// la méthode d'initialisation de la classe Display
 	protected void setup()
@@ -40,12 +35,13 @@ public class Display extends Agent
 
 			try
 			{
+				// création des drones un à un
 				this.getContainerController().createNewAgent(name, "main.Drone", arguments).start();
 			}
-			catch(Exception exception)
+			catch (StaleProxyException exception) 
 			{
-				System.out.println("Erreur : " + exception.getMessage());
-				System.exit(-1);	
+				exception.printStackTrace();
+				System.exit(-1);
 			}
 			
 			// on ajoute le drone créé dans la map des drones
@@ -55,11 +51,16 @@ public class Display extends Agent
 		// création de l'interface graphique ; on lui passe la map des drones pour qu'elle initialise le terrain
 		try
 		{
-			m_gui = new GUI(m_drones);
+			// paramètres à passer à l'agent GUI
+			Object[] arguments = {m_drones, this};
+			
+			// création de l'agent GUI
+			this.getContainerController().createNewAgent("GUI", "main.GUI", arguments).start();
 		}
-		catch (SDLException | InterruptedException e) 
+		catch (StaleProxyException exception) 
 		{
-			e.printStackTrace();
+			exception.printStackTrace();
+			System.exit(-1);
 		}
 		
 		// les deux behaviours que gère la classe Display : un behaviour qui envoie des messages périodiquement
@@ -67,6 +68,12 @@ public class Display extends Agent
 		// différentes) l'interface graphique
 		addBehaviour(new RetrievePositions(this, Constants.retrievePositionsPeriod));
 		addBehaviour(new UpdateGUI(this, Constants.updateGUIPeriod));
+	}
+	
+	// une méthode pour mettre à jour la position d'un drone
+	void updatePosition(String drone, Position position)
+	{
+		m_drones.get(drone).setPosition(position);
 	}
 	
 	// une méthode pour avoir la map des drones (nom, position)
@@ -115,20 +122,23 @@ class RetrievePositions extends TickerBehaviour
 	}
 }
 
-// behaviour qui périodiquement met à jour l'interface graphique via le paramètre m_gui
+// behaviour qui périodiquement met à jour l'interface graphique 
+// en lui envoyant la map des drones
 class UpdateGUI extends TickerBehaviour
 {
 	private static final long serialVersionUID = 1L;
 	
-	Display display = (Display) this.myAgent;
-	
+	Display m_display = (Display) this.myAgent;
+
 	public UpdateGUI(Agent agent, long period)
 	{
-		super(agent, period);	
+		super(agent, period);
 	}
 
 	protected void onTick() 
 	{
 		System.out.println("updateGUI");
+		
+		m_display.m_drones.get("Drone0").inc(0, 5);
 	}
 }

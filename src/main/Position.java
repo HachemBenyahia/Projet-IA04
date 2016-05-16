@@ -22,11 +22,43 @@ public class Position
 	{
 		return m_y;
 	}
-
+	
+	public void incX()
+	{
+		m_x ++;
+	}
+	
+	public void incX(int x)
+	{
+		m_x += x;
+	}
+	
+	public void incY()
+	{
+		m_y ++;
+	}
+	
+	public void incY(int y)
+	{
+		m_y += y;
+	}
+	
+	public void inc(int x, int y)
+	{
+		m_x += x;
+		m_y += y;
+	}
+	
 	public void setPosition(int x, int y)
 	{
 		m_x = x;
 		m_y = y;
+	}
+	
+	public void setPosition(Position position)
+	{
+		m_x = position.getX();
+		m_y = position.getY();
 	}
 	
 	public String toString()
