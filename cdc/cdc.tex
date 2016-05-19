@@ -422,7 +422,7 @@ C'est le conteneur principal, c'est lui qui contient les agents drones, affichag
 
 \subsubsection{\protect\Verb+Display+}
 
-C'est la classe qui crée les drones et met à jour l'interface graphique. Elle possède deux behaviours, l'un actualisant l'interface, l'autre allant chercher les positions des drones.
+C'est la classe qui crée les drones et met à jour l'interface graphique. Elle possède un seul behaviour, qui demande périodiquement aux drones leur position.
 
 \subsubsection{\protect\Verb+Drone+}
 
@@ -434,10 +434,10 @@ C'est une classe simple représentant une position $(x, y)$ sur le terrain. En p
 
 \subsubsection{\protect\Verb+Constants+}
 
-Cette classe recense les constantes du programme.
+Cette classe recense les constantes du programme et les méthodes appelées dans plusieurs classes.
 
 \subsubsection{\protect\Verb+GUI+}
 
-GUI signifie \textit{Graphical User Interface}, c'est la classe qui implémente l'interface graphique. Elle utilise la librairie \textbf{sdljava} (voir sur google). A l'heure où j'écris ces lignes, il y a un problème avec l'interface qui fait qu'elle monopolise toute la JVM quand elle est lancée (et donc empêche les agents de tourner), je vais essayer de voir comment régler ça.
+GUI signifie \textit{Graphical User Interface}, c'est la classe qui implémente l'interface graphique. Elle utilise la librairie \textbf{sdljava} (voir sur google). Tel que le code a été fait (et c'était le seul moyen de faire fonctionner la GUI avec les autres agents), elle hérite de la classe \verb|Agent| et possède une référence sur \verb|Display|. Elle se rafraichit constamment en fonction de l'état actuel du tableau de drones que possède \verb|Display| \textbf{(elle ne communique donc pas par messages)}.
 
 \end{document}
