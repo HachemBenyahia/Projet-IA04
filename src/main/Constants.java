@@ -8,11 +8,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import sdljava.SDLException;
-import sdljava.video.SDLColor;
-import sdljava.video.SDLSurface;
-import sdljava.video.SDLVideo;
-
 // classe qui recense les constantes utilisées par le programme
 public class Constants 
 {	
