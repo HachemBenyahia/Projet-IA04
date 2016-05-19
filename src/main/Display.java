@@ -23,18 +23,20 @@ public class Display extends Agent
 	protected void setup()
 	{	
 		// on crée les drones en leur affectant une position et un nom
-		for(int i = 0 ; i < Constants.numberDrones ; i++)
+		for(int i = 0 ; i < Constants.m_numberDrones ; i++)
 		{
 			// le nom est simplement la concaténation de "Drone" et de l'entier i
 			String name = "Drone" + Integer.toString(i);
 			
 			// on calcule une position libre sur le terrain
-			Position position = getFreePosition();	
+			Position position = getFreePosition();
+
+			Position goal = getFreePosition();	
 			
 			// dans jade, au lieu de passer par les arguments par le constructeur, il
 			// faut les passer dans un tableau d'objets ; on passe l'identifiant i et
 			// la position
-			Object[] arguments = {i, position};
+			Object[] arguments = {i, position, goal};
 
 			try
 			{
@@ -69,7 +71,7 @@ public class Display extends Agent
 		}
 		
 		// le behaviour chargé de récupérer les positions des drones
-		addBehaviour(new RetrievePositions(this, Constants.retrievePositionsPeriod));
+		addBehaviour(new RetrievePositions(this, Constants.m_retrievePositionsPeriod));
 	}
 	
 	// une méthode pour mettre à jour la position d'un drone
@@ -89,16 +91,10 @@ public class Display extends Agent
 	// cellules dont chaque cellule fait Constants.dotSize pixels de hauteur et largeur
 	Position getFreePosition()
 	{
-		int x, y;
-		Position position = new Position(0, 0);
+		Position position = null;
 		
 		do
-		{
-			x = (int) Math.floor(Math.random() * Constants.width) * Constants.dotSize;
-			y = (int) Math.floor(Math.random() * Constants.height) * Constants.dotSize;
-
-			position.setPosition(x, y);
-		}
+			position = Position.random();
 		while(m_drones.containsValue(position));
 		
 		return position;
@@ -148,6 +144,7 @@ class RetrievePositions extends TickerBehaviour
 			// j'ai utilisé méthode getDistance() pour montrer ce qu'elle donne
 			// (méthode qui sera utile pour le filtrage des messages des drones entre eux)
 			System.out.println(message.getSender().getLocalName() + " a envoyé " + position.toString());
+			
 			System.out.println("Distance du drone " + id + " à l'origine : " 
 			+ m_display.m_drones.get("Drone" + id).getDistance(new Position(0, 0)));
 			

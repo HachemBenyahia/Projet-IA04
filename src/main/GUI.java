@@ -46,8 +46,9 @@ public class GUI extends Agent
         {
         	// initialisation de la gui
 			SDLMain.init(SDLMain.SDL_INIT_VIDEO);
+			
         	// initialisation de l'écran
-			m_screen = SDLVideo.setVideoMode(Constants.pWidth, Constants.pHeight, 32, SDLVideo.SDL_DOUBLEBUF | SDLVideo.SDL_HWSURFACE);
+			m_screen = SDLVideo.setVideoMode(Constants.m_pWidth, Constants.m_pHeight, 32, SDLVideo.SDL_DOUBLEBUF | SDLVideo.SDL_HWSURFACE);
 	        // caption de la fenêtre (titre)
 	        SDLVideo.wmSetCaption("Flotte de drones en 2D", null);
 		} 
@@ -62,13 +63,13 @@ public class GUI extends Agent
         	for(Map.Entry<String, Position> entry : m_drones.entrySet())
     		{
     			// on crée une surface qui représentant le drone en question (de taille carrée = Constants.dotSize x Constant.dotSize)
-    	    	SDLSurface surface = SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, Constants.dotSize, Constants.dotSize, 32, 0, 0, 0, 0);
+    	    	SDLSurface surface = SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, Constants.m_dotSize, Constants.m_dotSize, 32, 0, 0, 0, 0);
     	    	
     	    	// on assigne une position à la surface, donnée dans la map des drones passée en paramètre
     	    	SDLRect rect = new SDLRect(entry.getValue().getX(), entry.getValue().getY());
     	    	
     	    	// on colorie la surface (rouge en l'occurence, mais on peut modifier les paramètres couleurs dans Constants)
-    	    	surface.fillRect(surface.mapRGB(Constants.droneRed, Constants.droneGreen, Constants.droneBlue));
+    	    	surface.fillRect(surface.mapRGB(Constants.m_droneRed, Constants.m_droneGreen, Constants.m_droneBlue));
     	    	
     	    	// on affiche la surface à l'écran à la position rect
     	        surface.blitSurface(m_screen, rect);
@@ -113,7 +114,7 @@ public class GUI extends Agent
 			try 
 			{
 				// effacement de l'écran par une couleur unie
-				m_screen.fillRect(m_screen.mapRGB(Constants.screenRed, Constants.screenGreen, Constants.screenBlue));
+				m_screen.fillRect(m_screen.mapRGB(Constants.m_screenRed, Constants.m_screenGreen, Constants.m_screenBlue));
 				
 				// blittage des différentes surfaces
 				for(Map.Entry<String, Position> entry : m_drones.entrySet())

@@ -29,8 +29,8 @@ public class Position
 		
 		if(m_x < 0)
 			m_x = 0;
-		else if(m_x > Constants.pWidth)
-			m_x = Constants.pWidth;
+		else if(m_x > (Constants.m_pWidth - Constants.m_dotSize))
+			m_x = Constants.m_pWidth - Constants.m_dotSize;
 	}
 	
 	public void addY(int y)
@@ -39,8 +39,8 @@ public class Position
 		
 		if(m_y < 0)
 			m_y = 0;
-		else if(m_y > Constants.pHeight)
-			m_y = Constants.pHeight;	
+		else if(m_y > (Constants.m_pHeight - Constants.m_dotSize))
+			m_y = Constants.m_pHeight - Constants.m_dotSize;	
 	}
 	
 	public void add(int x, int y)
@@ -71,22 +71,22 @@ public class Position
 	
 	public void up()
 	{
-		addY(-Constants.dotSize);
+		addY(-Constants.m_dotSize);
 	}
 	
 	public void left()
 	{
-		addX(-Constants.dotSize);
+		addX(-Constants.m_dotSize);
 	}
 	
 	public void right()
 	{
-		addX(Constants.dotSize);
+		addX(Constants.m_dotSize);
 	}
 	
 	public void down()
 	{
-		addY(Constants.dotSize);
+		addY(Constants.m_dotSize);
 	}
 	
 	public void upLeft()
@@ -113,10 +113,59 @@ public class Position
 		right();
 	}
 	
+	// modifie la position actuelle de manière à se rapprocher de l'objectif en paramètre
+	public void moveTowards(Position goal)
+	{
+		int x = goal.getX() - m_x;
+		int y = goal.getY() - m_y;
+		
+		if((x > 0) && (y > 0))
+			downRight();
+		
+		else if((x > 0) && (y < 0))
+			upRight();
+		
+		else if((x < 0) && (y > 0))
+			downLeft();
+		
+		else if((x < 0) && (y < 0))
+			upLeft();
+		
+		else if(x > 0)
+			right();
+		
+		else if(x < 0)
+			left();
+		
+		else if(y > 0)
+			down();
+		
+		else if(y < 0)
+			up();
+	}
+	
+	// génère une position aléatoire sur le terrain
+	static public Position random()
+	{
+		int x = (int) Math.floor(Math.random() * (Constants.m_width - 1)) * Constants.m_dotSize;
+		int y = (int) Math.floor(Math.random() * (Constants.m_height - 1)) * Constants.m_dotSize;
+
+		return new Position(x, y);
+	}
+	
 	// renvoie la distance au point passé en paramètre
-	public double getDistance(Position position)
+	public int getDistance(Position position)
 	{	
-		return Math.sqrt(Math.pow(position.getX() - m_x, 2) + Math.pow(position.getY() - m_y, 2));
+		return (int) Math.round(Math.sqrt(Math.pow(position.getX() - m_x, 2) + Math.pow(position.getY() - m_y, 2)));
+	}
+	
+	// renvoie vrai si le signal on est à la portée de l'émetteur du signal
+	public boolean reachable(Position position)
+	{
+		if(getDistance(position) > Constants.m_maxRange)
+			return false;
+		
+		return true;
 	}
 	
 	public void setPosition(int x, int y)
