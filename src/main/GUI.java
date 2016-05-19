@@ -22,10 +22,14 @@ public class GUI extends Agent
 	
 	// la map qui associe à chaque drone une surface (un carré rouge en l'occurence de taille Constants.dotSize)
 	Map<String, SDLSurface> m_surfaces = new HashMap<String, SDLSurface>();
+	
+	// la map de drones de Display qui est récupérée et stockée dans cet attribut
 	Map<String, Position> m_drones = null;
 	
 	// le booléen de boucle principale
 	boolean m_running = true;
+	
+	// la référence vers l'agent Display
 	Display m_display = null;
 	
 	// méthode appelée lors de la création de l'agent GUI
@@ -43,8 +47,7 @@ public class GUI extends Agent
         	// initialisation de la gui
 			SDLMain.init(SDLMain.SDL_INIT_VIDEO);
         	// initialisation de l'écran
-			m_screen = SDLVideo.setVideoMode(Constants.environmentWidth * Constants.dotSize, 
-			Constants.environmentHeight * Constants.dotSize, 32, SDLVideo.SDL_DOUBLEBUF | SDLVideo.SDL_HWSURFACE);
+			m_screen = SDLVideo.setVideoMode(Constants.pWidth, Constants.pHeight, 32, SDLVideo.SDL_DOUBLEBUF | SDLVideo.SDL_HWSURFACE);
 	        // caption de la fenêtre (titre)
 	        SDLVideo.wmSetCaption("Flotte de drones en 2D", null);
 		} 
@@ -87,17 +90,19 @@ public class GUI extends Agent
   
 			try 
 			{
-				 SDLEvent event = SDLEvent.pollEvent();
+				// on attend un évènement de manière non bloquante
+				SDLEvent event = SDLEvent.pollEvent();
 		           
-				 if(event instanceof SDLEvent )
-				 {
-					 switch (event.getType()) 
-					 {
+				if(event instanceof SDLEvent )
+				{
+					switch (event.getType()) 
+					{
+						// si on clique sur la croix rouge de la gui, on quitte la boucle
 		             	case SDLEvent.SDL_QUIT:    
 		             		m_running = false;    
 		             	break;
-		             }
-				 }
+		            }
+				}
 			} 
 			catch (SDLException exception) 
 			{
@@ -107,17 +112,23 @@ public class GUI extends Agent
 			
 			try 
 			{
-				m_screen.fillRect(m_screen.mapRGB(0, 0, 0));
+				// effacement de l'écran par une couleur unie
+				m_screen.fillRect(m_screen.mapRGB(Constants.screenRed, Constants.screenGreen, Constants.screenBlue));
+				
+				// blittage des différentes surfaces
 				for(Map.Entry<String, Position> entry : m_drones.entrySet())
 				{
 					SDLSurface surface = m_surfaces.get(entry.getKey());
 					surface.blitSurface(m_screen, new SDLRect(entry.getValue().getX(), entry.getValue().getY()));
 				}
+				
+				// rafraichissement de l'écran
 				m_screen.flip();
 			}
 			catch (SDLException exception) 
 			{
 				exception.printStackTrace();
+				System.exit(-1);
 			}
         }
         
@@ -140,5 +151,8 @@ public class GUI extends Agent
         
         // on quitte la gui (fermeture de la fenêtre)
         SDLMain.quit();
+        
+        // on quitte le programme
+        System.exit(0);
 	}
 }
