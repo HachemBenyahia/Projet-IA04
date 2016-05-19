@@ -147,8 +147,8 @@ public class Position
 	// génère une position aléatoire sur le terrain
 	static public Position random()
 	{
-		int x = (int) Math.floor(Math.random() * (Constants.m_width - 1)) * Constants.m_dotSize;
-		int y = (int) Math.floor(Math.random() * (Constants.m_height - 1)) * Constants.m_dotSize;
+		int x = (int) (Math.round(Math.random() * (Constants.m_width - 1)) * Constants.m_dotSize);
+		int y = (int) (Math.round(Math.random() * (Constants.m_height - 1)) * Constants.m_dotSize);
 
 		return new Position(x, y);
 	}

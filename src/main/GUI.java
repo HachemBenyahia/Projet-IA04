@@ -20,8 +20,11 @@ public class GUI extends Agent
 	// surface écran c'est la surface principale (la surface noire en fond)
 	SDLSurface m_screen = null;
 	
-	// la map qui associe à chaque drone une surface (un carré rouge en l'occurence de taille Constants.dotSize)
+	// la map qui associe à chaque drone une surface (un carré en l'occurence de taille Constants.dotSize)
 	Map<String, SDLSurface> m_surfaces = new HashMap<String, SDLSurface>();
+	
+	// map de couleurs
+	Map<String, Long> m_colors = new HashMap<String, Long>();
 	
 	// la map de drones de Display qui est récupérée et stockée dans cet attribut
 	Map<String, Position> m_drones = null;
@@ -62,15 +65,18 @@ public class GUI extends Agent
         {
         	for(Map.Entry<String, Position> entry : m_drones.entrySet())
     		{
+    	        // initialisation des couleurs
+    	        m_colors.put(entry.getKey(), Constants.randomColor());
+        		
     			// on crée une surface qui représentant le drone en question (de taille carrée = Constants.dotSize x Constant.dotSize)
     	    	SDLSurface surface = SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, Constants.m_dotSize, Constants.m_dotSize, 32, 0, 0, 0, 0);
     	    	
     	    	// on assigne une position à la surface, donnée dans la map des drones passée en paramètre
     	    	SDLRect rect = new SDLRect(entry.getValue().getX(), entry.getValue().getY());
     	    	
-    	    	// on colorie la surface (rouge en l'occurence, mais on peut modifier les paramètres couleurs dans Constants)
-    	    	surface.fillRect(surface.mapRGB(Constants.m_droneRed, Constants.m_droneGreen, Constants.m_droneBlue));
-    	    	
+    	    	// on colorie la surface
+    	    	surface.fillRect(m_colors.get(entry.getKey()).longValue());
+    	 
     	    	// on affiche la surface à l'écran à la position rect
     	        surface.blitSurface(m_screen, rect);
     	        
@@ -120,6 +126,7 @@ public class GUI extends Agent
 				for(Map.Entry<String, Position> entry : m_drones.entrySet())
 				{
 					SDLSurface surface = m_surfaces.get(entry.getKey());
+					surface.fillRect(m_colors.get(entry.getKey()).longValue());
 					surface.blitSurface(m_screen, new SDLRect(entry.getValue().getX(), entry.getValue().getY()));
 				}
 				
