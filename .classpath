@@ -4,12 +4,12 @@
 	<classpathentry kind="lib" path="jar/jade.jar"/>
 	<classpathentry kind="lib" path="lib/bsh.jar"/>
 	<classpathentry kind="lib" path="lib/jdom.jar"/>
-	<classpathentry kind="lib" path="lib/sdljava.jar">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/home/tchiky/code/java/Projet-IA04/jar/json-simple.jar"/>
+	<classpathentry kind="lib" path="lib/sdljava.jar" sourcepath="/home/tchiky/code/java/Projet-IA04/lib/sdljava.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="Projet-IA04/lib"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/home/tchiky/code/java/Projet-IA04/lib"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/Users/mohamed.b/code/java/Projet-IA04/jar/json-simple.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
