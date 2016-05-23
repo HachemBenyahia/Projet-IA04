@@ -23,6 +23,7 @@ public class Drone extends Agent
 	// sa position actuelle (x, y)
 	Position m_position;
 	
+	boolean isMaster = false;
 	// identifiant du maitre
 	AID masterId;
 	// position du maitre
@@ -61,9 +62,12 @@ public class Drone extends Agent
 		position.put("x", m_position.getX());
 		position.put("y", m_position.getY());
 		
+		JSONObject ismaster = new JSONObject();
+		ismaster.put("isMaster", String.valueOf(this.isMaster));
 		// on ajoute les deux dans le tableau d'objets JSON
 		args.add(id);
 		args.add(position);
+		args.add(ismaster);
 		
 		// on renvoie le JSON en string
 		return args.toJSONString();
@@ -174,6 +178,7 @@ class ReceiveEnvironment extends CyclicBehaviour
 				// � coder, en fonction de certains param�tres il faudra faire une chose ou une autre
 				// voir cahier des charges pour les diff�rents cas possibles comment traiter
 				// chacun d'entre eux
+				
 				System.out.println("Drone " + m_drone.m_id + " a d�tect� le drone " + id);
 			}
 		}
