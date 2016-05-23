@@ -23,12 +23,17 @@ public class Drone extends Agent
 	// sa position actuelle (x, y)
 	Position m_position;
 	
-	// l'objectif initial du drone (en terme de position à atteindre)
+	// identifiant du maitre
+	AID masterId;
+	// position du maitre
+	Position masterPosition;
+	
+	// l'objectif initial du drone (en terme de position ï¿½ atteindre)
 	Position m_goal;
 	
 	protected void setup()
 	{
-		// on récupère les paramètres passés lors de sa création
+		// on rï¿½cupï¿½re les paramï¿½tres passï¿½s lors de sa crï¿½ation
 		Object[] arguments = this.getArguments();
 		
 		m_id = (int) arguments[0];
@@ -41,17 +46,17 @@ public class Drone extends Agent
 		addBehaviour(new Movement(this, Constants.m_movementPeriod));
 	}
 	
-	// méthode qui permet d'encoder les paramètres du drones au format JSON
+	// mï¿½thode qui permet d'encoder les paramï¿½tres du drones au format JSON
 	@SuppressWarnings("unchecked")
 	String toJSONArray()
 	{
 		JSONArray args = new JSONArray();
 
-		// on sérialise l'id
+		// on sï¿½rialise l'id
 		JSONObject id = new JSONObject();
 		id.put("id", m_id);
 		
-		// on sérialise la position
+		// on sï¿½rialise la position
 		JSONObject position = new JSONObject();
 		position.put("x", m_position.getX());
 		position.put("y", m_position.getY());
@@ -64,13 +69,13 @@ public class Drone extends Agent
 		return args.toJSONString();
 	}
 	
-	// méthode qui génère une case du terrain et l'affecte à l'objectif
+	// mï¿½thode qui gï¿½nï¿½re une case du terrain et l'affecte ï¿½ l'objectif
 	public void generateGoal()
 	{
 		m_goal.setPosition(Position.random());
 	}
 
-	// renvoit vrai si l'objectif du drone a été atteint
+	// renvoit vrai si l'objectif du drone a ï¿½tï¿½ atteint
 	public boolean reachedGoal()
 	{
 		if(m_position.equals(m_goal))
@@ -80,7 +85,7 @@ public class Drone extends Agent
 	}
 }
 
-// behaviour qui répond à Display quand il lui demande quelque chose
+// behaviour qui rï¿½pond ï¿½ Display quand il lui demande quelque chose
 class RespondToDisplay extends CyclicBehaviour
 {
 	private static final long serialVersionUID = 1L;
@@ -96,7 +101,7 @@ class RespondToDisplay extends CyclicBehaviour
 	{	
 		ACLMessage message = m_drone.receive(MessageTemplate.MatchSender(new AID("Display", AID.ISLOCALNAME)));
 		
-		// si on a bien reçu un message de Display, on lui répond avec un INFORM
+		// si on a bien reï¿½u un message de Display, on lui rï¿½pond avec un INFORM
 		// dans lequel on envoie les informations en question au format JSON
 		if(message != null)
 		{
@@ -111,7 +116,7 @@ class RespondToDisplay extends CyclicBehaviour
 	}
 }
 
-// behaviour qui émet des caractéristiques du drone en permanence
+// behaviour qui ï¿½met des caractï¿½ristiques du drone en permanence
 class EmitEnvironment extends TickerBehaviour
 {
 	private static final long serialVersionUID = 1L;
@@ -131,7 +136,7 @@ class EmitEnvironment extends TickerBehaviour
 
 		message.setContent(m_drone.toJSONArray());
 		
-		// on envoit à tous les drones sauf soi-même
+		// on envoit ï¿½ tous les drones sauf soi-mï¿½me
 		for(int i = 0 ; i < Constants.m_numberDrones ; i ++)
 			if(i != m_drone.m_id)
 				message.addReceiver(new AID("Drone" + i, AID.ISLOCALNAME));
@@ -140,7 +145,7 @@ class EmitEnvironment extends TickerBehaviour
 	}
 }
 
-// behaviour qui analyse les messages reçus des autres drones
+// behaviour qui analyse les messages reï¿½us des autres drones
 class ReceiveEnvironment extends CyclicBehaviour
 {
 	private static final long serialVersionUID = 1L;
@@ -163,19 +168,19 @@ class ReceiveEnvironment extends CyclicBehaviour
 			int id = (int) parameters.get("id");
 			Position position = (Position) parameters.get("position");
 			
-			// le drone émetteur est proche
+			// le drone ï¿½metteur est proche
 			if(m_drone.m_position.reachable(position))
 			{
-				// à coder, en fonction de certains paramètres il faudra faire une chose ou une autre
-				// voir cahier des charges pour les différents cas possibles comment traiter
+				// ï¿½ coder, en fonction de certains paramï¿½tres il faudra faire une chose ou une autre
+				// voir cahier des charges pour les diffï¿½rents cas possibles comment traiter
 				// chacun d'entre eux
-				System.out.println("Drone " + m_drone.m_id + " a détecté le drone " + id);
+				System.out.println("Drone " + m_drone.m_id + " a dï¿½tectï¿½ le drone " + id);
 			}
 		}
 	}	
 }
 
-// classe qui gère le mouvement d'un drone
+// classe qui gï¿½re le mouvement d'un drone
 class Movement extends TickerBehaviour
 {
 	private static final long serialVersionUID = 1L;
@@ -191,8 +196,8 @@ class Movement extends TickerBehaviour
 
 	protected void onTick() 
 	{		
-		// par défaut (pour l'instant) on va considérer qu'il bouge en permanence vers un objectif sur le terrain ;
-		// en pratique, ca dépendra de son statut (mort, faisant partie d'une flotte, seul, etc)
+		// par dï¿½faut (pour l'instant) on va considï¿½rer qu'il bouge en permanence vers un objectif sur le terrain ;
+		// en pratique, ca dï¿½pendra de son statut (mort, faisant partie d'une flotte, seul, etc)
 		m_drone.m_position.moveTowards(m_drone.m_goal);
 		
 		if(m_drone.reachedGoal())
