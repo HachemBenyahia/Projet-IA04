@@ -130,7 +130,7 @@ class RetrievePositions extends TickerBehaviour
 		{
 			// on décrémente le nombre de messages attendus
 			m_sent --;
-			
+		/*	
 			// on récupère les paramètres du message JSON
 			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
 			
@@ -144,10 +144,7 @@ class RetrievePositions extends TickerBehaviour
 			// j'ai utilisé méthode getDistance() pour montrer ce qu'elle donne
 			// (méthode qui sera utile pour le filtrage des messages des drones entre eux)
 			System.out.println(message.getSender().getLocalName() + " a envoyé " + position.toString());
-			
-			System.out.println("Distance du drone " + id + " à l'origine : " 
-			+ m_display.m_drones.get("Drone" + id).getDistance(new Position(0, 0)));
-			
+			*/
 			// si on reçu toutes les réponses, on renvoie une load de message
 			// (le paramètre m_sent est actualisé dans sendToAll())
 			if(m_sent == 0)
