@@ -23,11 +23,11 @@ public class Drone extends Agent
 	// sa position actuelle (x, y)
 	Position m_position;
 	
-	boolean isMaster = false;
+	boolean m_isMaster = false;
 	// identifiant du maitre
-	AID masterId;
+	AID m_masterId;
 	// position du maitre
-	Position masterPosition;
+	Position m_masterPosition;
 	
 	// l'objectif initial du drone (en terme de position � atteindre)
 	Position m_goal;
