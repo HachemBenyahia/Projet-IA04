@@ -7,7 +7,7 @@ import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import sdljava.SDLException;
 
-// conteneur principal, c'est par lui que dï¿½marre l'application (quand on appuie sur ï¿½xï¿½cuter dans eclipse)
+// conteneur principal, c'est par lui que démarre l'application (quand on appuie sur éxécuter dans eclipse)
 public class MainContainer 
 {	
 	// le fichier properties
@@ -23,7 +23,7 @@ public class MainContainer
 			profile = new ProfileImpl(m_properties);
 			AgentContainer container = runtime.createMainContainer(profile);
 			
-			// on crï¿½e l'agent display, qui prendra la relï¿½ve ï¿½ partir d'ici (ï¿½ partir de .start())
+			// on crée l'agent display, qui prendra la relève à partir d'ici (à partir de .start())
 			AgentController display = container.createNewAgent("Display", "main.Display", null);
 			display.start();
 		}	

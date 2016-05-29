@@ -1,6 +1,7 @@
 package main;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -32,19 +33,46 @@ public class Drone extends Agent
 	// l'objectif initial du drone (en terme de position � atteindre)
 	Position m_goal;
 	
+	// l'�tat du drone
+	Constants.State m_state;
+	
+	Map<Integer, Position> m_fleet = new TreeMap<Integer, Position>();
+	
+	long m_lastReception;
+	
 	protected void setup()
 	{
 		// on r�cup�re les param�tres pass�s lors de sa cr�ation
 		Object[] arguments = this.getArguments();
-		
+
+		m_lastReception = System.currentTimeMillis();
 		m_id = (int) arguments[0];
 		m_position = (Position) arguments[1];
 		m_goal = (Position) arguments[2];
+		m_state = Constants.State.ALONE;
+		m_fleet.put(new Integer(m_id), m_position);
 		
 		addBehaviour(new RespondToDisplay(this));
 		addBehaviour(new EmitEnvironment(this, Constants.m_emitEnvironmentPeriod));
 		addBehaviour(new ReceiveEnvironment(this));
 		addBehaviour(new Movement(this, Constants.m_movementPeriod));
+	}
+
+	// savoir si on est le master
+	boolean isMaster()
+	{
+		if(((Integer) m_fleet.keySet().toArray()[0]).intValue() == m_id)
+			return true;
+		
+		return false;
+	}
+	
+	boolean isSecond()
+	{
+		if(((Integer) m_fleet.keySet().toArray()[1]).intValue() == m_id)
+			return true;
+		
+		return false;
 	}
 	
 	// m�thode qui permet d'encoder les param�tres du drones au format JSON
@@ -56,18 +84,32 @@ public class Drone extends Agent
 		// on s�rialise l'id
 		JSONObject id = new JSONObject();
 		id.put("id", m_id);
+		args.add(id);
 		
 		// on s�rialise la position
 		JSONObject position = new JSONObject();
 		position.put("x", m_position.getX());
 		position.put("y", m_position.getY());
-		
-		JSONObject ismaster = new JSONObject();
-		ismaster.put("isMaster", String.valueOf(this.isMaster));
-		// on ajoute les deux dans le tableau d'objets JSON
-		args.add(id);
 		args.add(position);
-		args.add(ismaster);
+		
+		JSONArray fleet = new JSONArray();
+		for(Map.Entry<Integer, Position> entry : m_fleet.entrySet())
+		{			
+			// on s�rialise l'id
+			id = new JSONObject();
+			id.put("id", entry.getKey());
+			
+			// on s�rialise la position
+			position = new JSONObject();
+			position.put("x", entry.getValue().getX());
+			position.put("y", entry.getValue().getY());
+			
+			JSONArray value = new JSONArray();
+			value.add(id);
+			value.add(position);
+			fleet.add(value);
+		}
+		args.add(fleet);
 		
 		// on renvoie le JSON en string
 		return args.toJSONString();
@@ -86,6 +128,74 @@ public class Drone extends Agent
 			return true;
 		
 		return false;
+	}
+
+	public Integer nextInFleet()
+	{
+		if(isMaster())
+			return m_id;
+
+		Object[] keys = m_fleet.keySet().toArray();
+
+		for(int i = 0 ; i < keys.length ; i ++)
+		{
+			Integer key = (Integer) keys[i];
+			if(m_id == key.intValue())
+				return (Integer) keys[i - 1];
+		}
+		
+		// erreur
+		return -1;
+	}
+	
+	public Position goalInFleet()
+	{
+		//int index = getIndexInFleet();
+		//int size = m_fleet.size();
+		
+		// �ventuellement se positionner dans une structure en anneau
+		
+		Position position = (Position) m_fleet.get(nextInFleet());
+
+		return position;
+	}
+	
+	public boolean idIsMaster(int id)
+	{
+		Object[] keys = m_fleet.keySet().toArray();
+
+		if(((Integer)keys[0]).intValue() == id)
+			return true;
+		
+		return false;
+	}
+	
+	public int getIndexInFleet()
+	{
+		Object[] keys = m_fleet.keySet().toArray();
+
+		for(int i = 0 ; i < keys.length ; i ++)
+		{
+			Integer key = (Integer) keys[i];
+			if(m_id == key.intValue())
+				return i;
+		}
+		
+		// erreur
+		return -1;
+	}
+	
+	public void updateMaster()
+	{
+		if((System.currentTimeMillis() - m_lastReception) > 3000)
+		{
+			m_fleet.remove(m_fleet.keySet().toArray()[0]);
+		}
+		
+		//
+		
+	//	if(m_fleet.size() == 1)
+		//	m_state = Constants.State.ALONE;
 	}
 }
 
@@ -161,6 +271,7 @@ class ReceiveEnvironment extends CyclicBehaviour
 		m_drone = drone;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void action() 
 	{
 		ACLMessage message = m_drone.receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
@@ -169,17 +280,53 @@ class ReceiveEnvironment extends CyclicBehaviour
 		{
 			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
 
-			int id = (int) parameters.get("id");
 			Position position = (Position) parameters.get("position");
 			
 			// le drone �metteur est proche
 			if(m_drone.m_position.reachable(position))
-			{
-				// � coder, en fonction de certains param�tres il faudra faire une chose ou une autre
-				// voir cahier des charges pour les diff�rents cas possibles comment traiter
-				// chacun d'entre eux
+			{	
+				int id = (int) parameters.get("id");
 				
-				System.out.println("Drone " + m_drone.m_id + " a d�tect� le drone " + id);
+				if(!m_drone.m_fleet.containsKey(new Integer(id)))
+				{
+					ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+					reply.setContent(m_drone.toJSONArray());
+					reply.addReceiver(new AID("Drone" + id, AID.ISLOCALNAME));
+					m_drone.send(reply);
+				}
+				else
+				{
+					if(m_drone.idIsMaster(id))
+						m_drone.m_lastReception = System.currentTimeMillis();
+				}
+				
+				if(m_drone.m_position.equals(position))
+					System.out.println("collision");
+				
+				Map<Integer, Position> fleet = (Map<Integer, Position>) parameters.get("fleet");
+				System.out.println("Drone " + m_drone.m_id + " : " + m_drone.m_fleet + " next : " + m_drone.nextInFleet() 
+				+ " " + m_drone.m_state.toString());
+				
+				switch(m_drone.m_state)
+				{
+					case ALONE :
+						m_drone.m_state = Constants.State.FUSION;
+						
+						m_drone.m_fleet.putAll(fleet);
+					break;
+					
+					case FUSION :
+						m_drone.m_state = Constants.State.FLEET;
+					break;
+					
+					case FLEET :
+						m_drone.m_fleet.putAll(fleet);
+						m_drone.m_fleet.replace(new Integer(id), position);
+					break;
+					
+					default :
+					break;
+				}
 			}
 		}
 	}	
@@ -200,12 +347,33 @@ class Movement extends TickerBehaviour
 	}
 
 	protected void onTick() 
-	{		
-		// par d�faut (pour l'instant) on va consid�rer qu'il bouge en permanence vers un objectif sur le terrain ;
-		// en pratique, ca d�pendra de son statut (mort, faisant partie d'une flotte, seul, etc)
-		m_drone.m_position.moveTowards(m_drone.m_goal);
-		
-		if(m_drone.reachedGoal())
-			m_drone.generateGoal();
+	{			
+		switch(m_drone.m_state)
+		{
+			case ALONE :
+				m_drone.m_position.moveTowards(m_drone.m_goal);
+				
+				if(m_drone.reachedGoal())
+					m_drone.generateGoal();
+			break;
+			
+			case FLEET :
+				if(m_drone.isMaster())
+				{
+					if(m_drone.reachedGoal())
+						m_drone.generateGoal();
+				}
+				else
+				{
+					m_drone.updateMaster();
+					m_drone.m_goal = m_drone.goalInFleet();
+				}
+
+				m_drone.m_position.moveTowards(m_drone.m_goal);
+			break;
+			
+			case FUSION :
+			break;
+		}
 	}
 }
