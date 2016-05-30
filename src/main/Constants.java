@@ -22,7 +22,7 @@ public class Constants
 	static int m_height = 40;
 	
 	// le nombre de drones sur le terrain
-	static int m_numberDrones = 5;
+	static int m_numberDrones = 10;
 	
 	// la taille d'une cellule sur le terrain (en pixels)
 	static int m_dotSize = 10;
@@ -35,7 +35,7 @@ public class Constants
 	static int m_movementPeriod = 1000;
 	
 	// portée maximale en pixels
-	static int m_maxRange = 50;
+	static int m_maxRange = 100;
 	
 	// les coefficients rgb de la couleur du drone
 	static int m_droneRed = 255;
@@ -52,6 +52,11 @@ public class Constants
 	
 	// la hauteur du terrain (en pixels)
 	static int m_pHeight = m_height * m_dotSize;
+	
+	// le rayon du cercle formé par une flotte
+	// TODO changer pour une fonction de nombre de drones dans la flotte
+	static int m_minFleetRadius = (5*m_dotSize);
+	static int m_droneNumberForMinRadius = 4;
 	
 	static enum State{ALONE, FLEET, FUSION};
 	

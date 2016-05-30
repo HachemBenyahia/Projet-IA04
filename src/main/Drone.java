@@ -147,11 +147,38 @@ public class Drone extends Agent
 		//int index = getIndexInFleet();
 		//int size = m_fleet.size();
 		
-		// éventuellement se positionner dans une structure en anneau
+		// positionnement dans une structure en anneau
 		
-		Position position = (Position) m_fleet.get(nextInFleet());
+		//Position position = (Position) m_fleet.get(nextInFleet());
+		if (this.isMaster())
+		{
+			return this.m_position;
+		}
+		
+		double angle = (2*Math.PI)/m_fleet.size();
+		angle /= this.getIndexInFleet();
+		System.out.println("Angle for " + this.getIndexInFleet() + " : " + angle);
+		
+		int fleetRadius = getFleetRadius();
+		
+		Position position = m_fleet.get(m_fleet.keySet().toArray()[0]);
+		System.out.println("Position a suivre : " + this.getIndexInFleet() + " : {" + position.m_x + ", " + position.m_y + "}");
+
+		position.m_x += fleetRadius * Math.cos(angle);
+		position.m_y -= fleetRadius * Math.sin(angle);
+		System.out.println("Position for " + this.getIndexInFleet() + " : {" + position.m_x + ", " + position.m_y + "}");
 
 		return position;
+	}
+	
+	public int getFleetRadius()
+	{
+		if (!(this.m_fleet.size() <= Constants.m_droneNumberForMinRadius))
+		{
+			return Constants.m_minFleetRadius + m_fleet.size()* Constants.m_dotSize;
+		}
+		
+		return Constants.m_minFleetRadius;
 	}
 	
 	public boolean idIsMaster(int id)
