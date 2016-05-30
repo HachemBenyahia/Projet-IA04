@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -24,12 +25,6 @@ public class Drone extends Agent
 	// sa position actuelle (x, y)
 	Position m_position;
 	
-	boolean m_isMaster = false;
-	// identifiant du maitre
-	AID m_masterId;
-	// position du maitre
-	Position m_masterPosition;
-	
 	// l'objectif initial du drone (en terme de position � atteindre)
 	Position m_goal;
 	
@@ -39,6 +34,8 @@ public class Drone extends Agent
 	Map<Integer, Position> m_fleet = new TreeMap<Integer, Position>();
 	
 	long m_lastReception;
+	
+	boolean m_alive;
 	
 	protected void setup()
 	{
@@ -51,6 +48,7 @@ public class Drone extends Agent
 		m_goal = (Position) arguments[2];
 		m_state = Constants.State.ALONE;
 		m_fleet.put(new Integer(m_id), m_position);
+		m_alive = true;
 		
 		addBehaviour(new RespondToDisplay(this));
 		addBehaviour(new EmitEnvironment(this, Constants.m_emitEnvironmentPeriod));
@@ -246,6 +244,8 @@ class EmitEnvironment extends TickerBehaviour
 
 	protected void onTick() 
 	{
+		if (!m_drone.m_alive) return;
+		
 		ACLMessage message = new ACLMessage(ACLMessage.INFORM);
 
 		message.setContent(m_drone.toJSONArray());
@@ -260,7 +260,7 @@ class EmitEnvironment extends TickerBehaviour
 }
 
 // behaviour qui analyse les messages re�us des autres drones
-class ReceiveEnvironment extends CyclicBehaviour
+class ReceiveEnvironment extends Behaviour
 {
 	private static final long serialVersionUID = 1L;
 
@@ -301,11 +301,19 @@ class ReceiveEnvironment extends CyclicBehaviour
 				}
 				
 				if(m_drone.m_position.equals(position))
+				{
 					System.out.println("collision");
+					ACLMessage deathMessage = new ACLMessage(ACLMessage.FAILURE);
+					deathMessage.addReceiver(new AID("Display", AID.ISLOCALNAME));
+					deathMessage.setContent(m_drone.toJSONArray());
+					m_drone.m_alive = false;
+					m_drone.send(deathMessage);
+					return;
+				}
 				
 				Map<Integer, Position> fleet = (Map<Integer, Position>) parameters.get("fleet");
-				System.out.println("Drone " + m_drone.m_id + " : " + m_drone.m_fleet + " next : " + m_drone.nextInFleet() 
-				+ " " + m_drone.m_state.toString());
+				//System.out.println("Drone " + m_drone.m_id + " : " + m_drone.m_fleet + " next : " + m_drone.nextInFleet() 
+				//+ " " + m_drone.m_state.toString());
 				
 				switch(m_drone.m_state)
 				{
@@ -329,7 +337,11 @@ class ReceiveEnvironment extends CyclicBehaviour
 				}
 			}
 		}
-	}	
+	}
+	
+	public boolean done() {
+		return !m_drone.m_alive;
+	}
 }
 
 // classe qui g�re le mouvement d'un drone
@@ -347,7 +359,8 @@ class Movement extends TickerBehaviour
 	}
 
 	protected void onTick() 
-	{			
+	{	
+		if (!m_drone.m_alive) return;
 		switch(m_drone.m_state)
 		{
 			case ALONE :
