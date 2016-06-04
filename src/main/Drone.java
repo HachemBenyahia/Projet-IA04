@@ -15,31 +15,99 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 // classe Drone
+/**
+ * <b>Drone est la classe représentant un individu de la flotte.</b>
+ * <p>Un membre du SDZ est caractérisé par les informations suivantes : </p>
+ * <ul>
+ * 	<li>Un identifiant unique.</li>
+ * 	<li>Sa position actuelle.</li>
+ *	<li>La position que le drone veut atteindre.</li>
+ * 	<li>L'état du drone.</li>
+ * 	<li>Un Map qui contient la liste des membres de la flotte.<>
+ * </ul>
+ * 
+ * @see Constants#State
+ */
 public class Drone extends Agent
 {
 	private static final long serialVersionUID = 1L;
 	
 	// l'id du drone
+	/**
+	 * L'ID du drone, c'est fixé pendant l'initialisation du drone, il sert aussi pour savoir si le drone est un maître ou pas.
+	 * @see Drone#isMaster
+	*/
 	int m_id;
 	
 	// sa position actuelle (x, y)
+	
+	/**
+	 * C'est la position où le drone se trouve à chaque instant.
+	 * 
+	 * @see Position
+	*/
 	Position m_position;
 	
-	// l'objectif initial du drone (en terme de position � atteindre)
+	// l'objectif initial du drone (en terme de position à atteindre)
+	/**
+	 * C'est la position que le drone veut attaindre.
+	 * @see Position
+	*/
 	Position m_goal;
 	
-	// l'�tat du drone
+	// l'état du drone
+	/**
+	 * C'est l'état actuel du drone par rapport à la flotte : seul, flotte, fusion, etc.
+	 * Pour connaître tous les possibles états d'un drone, regardez la documentation de Constants.State
+	 * @see Constants#State 
+	 * @see Drone#goalInFleet
+	*/
 	Constants.State m_state;
 	
+	/**
+	 * C'est la liste de drones qu'appartiennent à la flotte de ce drone|, y compris la position actuele de chaqu'un.
+	 * Le maître de la flotte est l'élément 0 de la liste.
+	 * 
+	 * @see Drone#idIsMaster
+	*/
 	Map<Integer, Position> m_fleet = new TreeMap<Integer, Position>();
 	
+	/**
+	 * C'est un nombre indicant le moment de la dernière réception d'un message.
+	*/
 	long m_lastReception;
 	
+	/**
+	 * C'est un boolean indicant si ce drone est toujours vivant.
+	*/
 	boolean m_alive;
 	
+	/**
+	 * C'est le constructeur de la classe, tout drone créé est initialisé comme ALONE,
+	 * sa dernière réception prend la valeur de l'instant de création, la position de destin et d'origine
+	 * doivent être fournies pendant la création du drone,
+	 * ce drone est le premier élément ajouté à la liste de membres de la flotte.
+	 * 
+	 * Dans cette méthode, on ajoute également les comportements du drone.
+	 * 
+	 * @param m_lastReception
+	 * 		Instant de la dernière réception d'un message
+	 * @param m_id
+	 * 		ID de ce drone
+	 * @param m_position
+	 * 		Position initial de ce drone
+	 * @param m_goal
+	 * 		Position destin originale de ce drone
+	 * @see Position
+	 * @see Constants.State
+	 * @see RespondToDisplay
+	 * @see EmitEnvironment
+	 * @see	ReceiveEnvironment
+	 * @see Movement
+	*/
 	protected void setup()
 	{
-		// on r�cup�re les param�tres pass�s lors de sa cr�ation
+		// on récupère les paramètres passés lors de sa création
 		Object[] arguments = this.getArguments();
 
 		m_lastReception = System.currentTimeMillis();
@@ -56,7 +124,12 @@ public class Drone extends Agent
 		addBehaviour(new Movement(this, Constants.m_movementPeriod));
 	}
 
-	// savoir si on est le master
+	// savoir si l'on est le master
+	/**
+	 * Vérifie si l'on est le maître.
+	 * @return La valeur de la vérification.
+	 * @see Drone#m_fleet
+	*/
 	boolean isMaster()
 	{
 		if(((Integer) m_fleet.keySet().toArray()[0]).intValue() == m_id)
@@ -65,6 +138,11 @@ public class Drone extends Agent
 		return false;
 	}
 	
+	/**
+	 * Vérifie si l'on est le deuxième.
+	 * @return La valeur de la vérification.
+	 * @see Drone#m_fleet
+	*/
 	boolean isSecond()
 	{
 		if(((Integer) m_fleet.keySet().toArray()[1]).intValue() == m_id)
@@ -73,31 +151,37 @@ public class Drone extends Agent
 		return false;
 	}
 	
-	// m�thode qui permet d'encoder les param�tres du drones au format JSON
+	// méthode qui permet d'encoder les paramètres du drones au format JSON
+	/**
+	 * Retourne le drone sous forme d'une chaîne JSON.
+	 * @return La chaîne JSON contenant l'information de ce drone.
+	*/
 	@SuppressWarnings("unchecked")
 	String toJSONArray()
 	{
+		//Objet qui contiendra la sérialisation du drone
 		JSONArray args = new JSONArray();
 
-		// on s�rialise l'id
+		// on sérialise l'id
 		JSONObject id = new JSONObject();
 		id.put("id", m_id);
 		args.add(id);
 		
-		// on s�rialise la position
+		// on sérialise la position dans un objet JSON  position et après on rajoute cet objet à args
 		JSONObject position = new JSONObject();
 		position.put("x", m_position.getX());
 		position.put("y", m_position.getY());
 		args.add(position);
 		
+		//On rajoute chaque drone de la flotte à la sérialisation
 		JSONArray fleet = new JSONArray();
 		for(Map.Entry<Integer, Position> entry : m_fleet.entrySet())
 		{			
-			// on s�rialise l'id
+			// on sérialise l'id
 			id = new JSONObject();
 			id.put("id", entry.getKey());
 			
-			// on s�rialise la position
+			// on sérialise la position
 			position = new JSONObject();
 			position.put("x", entry.getValue().getX());
 			position.put("y", entry.getValue().getY());
@@ -113,13 +197,23 @@ public class Drone extends Agent
 		return args.toJSONString();
 	}
 	
-	// m�thode qui g�n�re une case du terrain et l'affecte � l'objectif
+	// méthode qui génère une case du terrain et l'affecte à l'objectif
+	/**
+	 * Permet d'affecter le drone à un destin (Position) sélectioné aléatoirement.
+	 * @see Position#random
+	*/
 	public void generateGoal()
 	{
 		m_goal.setPosition(Position.random());
 	}
 
-	// renvoit vrai si l'objectif du drone a �t� atteint
+	// renvoit vrai si l'objectif du drone a été atteint
+	/**
+	 * Permet savoir si l'on a atteint le destin, i.e., si la position actuelle est égale à la position destin.
+	 * @return Le résultat de la comparaison
+	 * @see Drone#m_position
+	 * @see Drone#m_goal
+	*/
 	public boolean reachedGoal()
 	{
 		if(m_position.equals(m_goal))
@@ -127,7 +221,13 @@ public class Drone extends Agent
 		
 		return false;
 	}
-
+	
+	/**
+	 * Permet savoir quelle est le drone qui se trouve avant nous dans la liste de la flotte.
+	 * Si l'on est le maître elle retourne notre propre ID.
+	 * @return L'ID du drone qui se trouve avant nous dans la liste.
+	 * @see Drone#m_fleet
+	*/
 	public Integer nextInFleet()
 	{
 		if(isMaster())
@@ -146,18 +246,35 @@ public class Drone extends Agent
 		return -1;
 	}
 	
+	/**
+	 * Permet savoir la position destin de ce drone
+	 * Si l'on est le maître elle retourne la position destin originale, c'est-à-dire, comme si le dron était tout seul.
+	 * Si l'on n'est pas le maìtre, on calcule la position destin en fonction de la position destin du maître de la flotte.
+	 
+	 * @return La prochaine destin de ce drone.
+	 * @see Drone#m_goal
+	 * @see isMaster
+	*/
 	public Position goalInFleet()
 	{
 		//int index = getIndexInFleet();
 		//int size = m_fleet.size();
 		
-		// �ventuellement se positionner dans une structure en anneau
+		// Éventuellement se positionner dans une structure en anneau
 		
 		Position position = (Position) m_fleet.get(nextInFleet());
 
 		return position;
 	}
 	
+	/**
+	 * Permet savoir si un ID donné correspond avec celui de notre maître.
+	 * @param id
+	 * 	L'ID que l'on veut comparer avec celui de notre maître
+	 * @return Le résultat de la comparaison
+	 
+	 * @see isMaster
+	*/
 	public boolean idIsMaster(int id)
 	{
 		Object[] keys = m_fleet.keySet().toArray();
@@ -168,6 +285,10 @@ public class Drone extends Agent
 		return false;
 	}
 	
+	/**
+	 * Permet connaître l'index que l'on occupe dans la liste d'éléments de la flotte.
+	 * @return L'index que l'on occupe parmi les éléments de la flotte.
+	*/
 	public int getIndexInFleet()
 	{
 		Object[] keys = m_fleet.keySet().toArray();
@@ -183,6 +304,9 @@ public class Drone extends Agent
 		return -1;
 	}
 	
+	/**
+	 * Permet remplacer le maître si le temps passé est supérieur à 3000 millisecondes.
+	*/
 	public void updateMaster()
 	{
 		if((System.currentTimeMillis() - m_lastReception) > 3000)
