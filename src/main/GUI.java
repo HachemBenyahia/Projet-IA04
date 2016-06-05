@@ -31,6 +31,8 @@ public class GUI extends Agent
 	
 	// la map de drones de Display qui est r�cup�r�e et stock�e dans cet attribut
 	Map<String, Position> m_drones = null;
+	Map<String, Position> m_portals = null;
+	Map<String, Boolean> m_portalsStates = null;
 	Map<String, Position> m_last_drones_state = null;
 	Queue<Map.Entry<String, Position>> m_deletedDrones = null;
 	
@@ -48,7 +50,9 @@ public class GUI extends Agent
 		Object[] arguments = this.getArguments();
 		
 		m_drones =  (Map<String, Position>) arguments[0];
-		m_display = (Display) arguments[1];
+		m_portals = (Map<String, Position>) arguments[1];
+		m_portalsStates = (Map<String, Boolean>) arguments[2];
+		m_display = (Display) arguments[3];
 		m_deletedDrones = new ArrayBlockingQueue<Map.Entry<String, Position>>(Constants.m_numberDrones);
 		
         try 

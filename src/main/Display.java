@@ -19,6 +19,10 @@ public class Display extends Agent
 	// la map qui contient le nom du drone et sa position (la position est un couple (x,y))
 	// par exemple ["Drone1"] = (232, 105)
 	Map<String, Position> m_drones = new HashMap<String, Position>();
+	// contient le nom du portail et sa position
+	Map<String, Position> m_portals = new HashMap<String, Position>();
+	// contient le nom du portail et un boolean qui informe si il est ouvert ou non
+	Map<String, Boolean> m_portalsStates = new HashMap<String, Boolean>();
 	
 	// la m�thode d'initialisation de la classe Display
 	protected void setup()
@@ -53,14 +57,42 @@ public class Display extends Agent
 			// on ajoute le drone cr�� dans la map des drones
 			m_drones.put(name, position);
 		}
-	
+		int portalPlacesToConsume = Constants.m_numberDrones;
+		int portalIndex = 0;
+		// tant qu'il y a des drones, on ajoute des portails dont la place va varier de 2 à 4 aléatoirement, puis on retire
+		// le nombre choisi à la stack et on continue ...
+		
+		while(portalPlacesToConsume > 0)
+		{
+			 int places = (int) Math.round(Math.random() * 2) + 2; // 2 or 3 or 4 drones acceptés 
+			 places %= portalPlacesToConsume;   // pour que le nombre de places allouées ne dépasse pas le nombre de places disponibles
+			 portalPlacesToConsume -= places;
+			 String name = "Portal" + Integer.toString(portalIndex);
+			 Position position = getFreePosition();
+			 portalIndex++;
+			 Object[] arguments = {portalIndex, position, places};
+			 
+			 try
+			 {
+				this.getContainerController().createNewAgent(name, "main.Portal", arguments).start();
+			 }
+			 catch (StaleProxyException exception) 
+			 {
+				exception.printStackTrace();
+				System.exit(-1);
+			 }
+			 m_portals.put(name, position);
+			 // à l'initialisation, tous les portails sont ouverts
+			 m_portalsStates.put(name, true);
+		}
+		
 		// cr�ation de l'interface graphique ; on lui passe la map des drones pour qu'elle initialise le terrain
 		// et une r�f�rence sur Display (je sais, c'est de la triche, mais c'est le seul moyen de faire fonctionner
 		// le truc)
 		try
 		{
 			// param�tres � passer � l'agent GUI
-			Object[] arguments = {m_drones, this};
+			Object[] arguments = {m_drones, m_portals, m_portalsStates, this};
 			
 			// cr�ation de l'agent GUI
 			this.getContainerController().createNewAgent("GUI", "main.GUI", arguments).start();
@@ -196,3 +228,7 @@ class DeathDetector extends CyclicBehaviour
 			block();
 	}
 }
+
+
+// ajouter un behaviour qui écoute les messages venant de Portal qui informent que ce portail est désormais fermé
+// (reception du nombre de drone requis)

@@ -34,7 +34,7 @@ public class Drone extends Agent
 	
 	// l'id du drone
 	/**
-	 * L'ID du drone, c'est fixé pendant l'initialisation du drone, il sert aussi pour savoir si le drone est un maître ou pas.
+	 * L'ID du drone est fixé à l'initialisation du drone, il sert à identifier le drone et à savoir s'il est un maître ou pas.
 	 * @see Drone#isMaster
 	*/
 	int m_id;
