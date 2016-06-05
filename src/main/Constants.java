@@ -9,10 +9,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-// classe qui recense les constantes utilisées par le programme
+// classe qui recense les constantes utilisï¿½es par le programme
 public class Constants 
 {	
-	// la période de récupération des positions des drones (en ms)
+	// la pï¿½riode de rï¿½cupï¿½ration des positions des drones (en ms)
 	static int m_retrievePositionsPeriod = 1000;
 	
 	// la largeur du terrain (en nombre de cellules)
@@ -22,19 +22,19 @@ public class Constants
 	static int m_height = 40;
 	
 	// le nombre de drones sur le terrain
-	static int m_numberDrones = 5;
+	static int m_numberDrones = 20;
 	
 	// la taille d'une cellule sur le terrain (en pixels)
 	static int m_dotSize = 10;
 
-	// période d'émission de caractéristiques du drone dans l'environnement
+	// pï¿½riode d'ï¿½mission de caractï¿½ristiques du drone dans l'environnement
 	static int m_emitEnvironmentPeriod = 1000;
 	
-	// période de mouvement d'un drone, c'est-dire la période entre
-	// deux déplacements (ou deux tentatives de déplacement en tout cas
+	// pï¿½riode de mouvement d'un drone, c'est-dire la pï¿½riode entre
+	// deux dï¿½placements (ou deux tentatives de dï¿½placement en tout cas
 	static int m_movementPeriod = 1000;
 	
-	// portée maximale en pixels
+	// portï¿½e maximale en pixels
 	static int m_maxRange = 50;
 	
 	// les coefficients rgb de la couleur du drone
@@ -42,7 +42,7 @@ public class Constants
 	static int m_droneGreen = 0;
 	static int m_droneBlue = 0;
 	
-	// les coefficients rgb de la couleur de l'écran
+	// les coefficients rgb de la couleur de l'ï¿½cran
 	static int m_screenRed = 0;
 	static int m_screenGreen = 0;
 	static int m_screenBlue = 0;
@@ -60,8 +60,8 @@ public class Constants
 		m_numberDrones = numberDrones;
 	}
 	
-	// méthode qui permet de traduire les paramètres du drones passés au format JSON
-	// en tableau de paramètres Object (position, id, etc.)
+	// mï¿½thode qui permet de traduire les paramï¿½tres du drones passï¿½s au format JSON
+	// en tableau de paramï¿½tres Object (position, id, etc.)
 	// je l'ai mise dans ce fichier parce que les drones doivent l'utiliser aussi a priori
 	static public Map<String, Object> fromJSONArray(String message)
 	{
@@ -73,12 +73,12 @@ public class Constants
 		{
 			args = (JSONArray) jsonParser.parse(message);
 			
-			// l'id du drone se trouve à la position 0
+			// l'id du drone se trouve ï¿½ la position 0
 			JSONObject values = (JSONObject) args.get(0);
 			int id = Integer.parseInt((values.get("id")).toString());
 			parameters.put("id", id);
 			
-			// la position du drone se trouve à l'index 1 (voir encodage JSON dans Drone)
+			// la position du drone se trouve ï¿½ l'index 1 (voir encodage JSON dans Drone)
 			values = (JSONObject) args.get(1);
 			int x = Integer.parseInt((values.get("x")).toString());
 			int y = Integer.parseInt((values.get("y")).toString());
@@ -110,13 +110,17 @@ public class Constants
 			System.exit(-1);
 		}
 		
-		// on renvoie la map des paramètres
+		// on renvoie la map des paramï¿½tres
 		return parameters;
 	}
 	
-	// renvoie une couleur aléatoire
+	// renvoie une couleur alï¿½atoire
 	public static Long randomColor()
 	{	
 		return (Long) Math.round(Math.random() * Math.pow(2, 32));
+	}
+	public static Long whiteColor()
+	{
+		return (Long) Math.round(Math.pow(2, 32));
 	}
 }
