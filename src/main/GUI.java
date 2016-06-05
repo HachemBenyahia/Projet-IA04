@@ -154,9 +154,8 @@ public class GUI extends Agent
 				while(!m_deletedDrones.isEmpty())
 				{
 					Map.Entry<String, Position> deletedDrone = m_deletedDrones.poll();
-					System.out.println("DELETE DRONE TO BLINK : " + deletedDrone.getKey());
 					SDLSurface surface = m_surfaces.get(deletedDrone.getKey());
-					surface.fillRect(10000);
+					surface.fillRect(Constants.whiteColor());
 					surface.blitSurface(m_screen, new SDLRect(deletedDrone.getValue().getX(), deletedDrone.getValue().getY()));
 				}
 				// rafraichissement de l'�cran

@@ -119,4 +119,8 @@ public class Constants
 	{	
 		return (Long) Math.round(Math.random() * Math.pow(2, 32));
 	}
+	public static Long whiteColor()
+	{
+		return (Long) Math.round(Math.pow(2, 32));
+	}
 }
