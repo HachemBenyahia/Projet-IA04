@@ -37,4 +37,10 @@ https://docs.google.com/presentation/d/1zdrtg446YPckJ8mVfLespbH7-TwmCPQ4mljJr66X
 
 <br>
 
+Le rapport et le cahier des charges (latex) en cours d'édition se trouvent à l'adresse suivante :
+
+https://fr.sharelatex.com/project/5752f88b1233ff3d66668613
+
+<br>
+
 <b>Les soutenances ont lieu du 13 au 16 juin.</b>

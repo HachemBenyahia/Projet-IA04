@@ -5,6 +5,7 @@ import java.util.Map;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -19,13 +20,13 @@ public class Display extends Agent
 	// par exemple ["Drone1"] = (232, 105)
 	Map<String, Position> m_drones = new HashMap<String, Position>();
 	
-	// la méthode d'initialisation de la classe Display
+	// la mï¿½thode d'initialisation de la classe Display
 	protected void setup()
 	{	
-		// on crée les drones en leur affectant une position et un nom
+		// on crï¿½e les drones en leur affectant une position et un nom
 		for(int i = 0 ; i < Constants.m_numberDrones ; i++)
 		{
-			// le nom est simplement la concaténation de "Drone" et de l'entier i
+			// le nom est simplement la concatï¿½nation de "Drone" et de l'entier i
 			String name = "Drone" + Integer.toString(i);
 			
 			// on calcule une position libre sur le terrain
@@ -40,7 +41,7 @@ public class Display extends Agent
 
 			try
 			{
-				// création des drones un à un
+				// crï¿½ation des drones un ï¿½ un
 				this.getContainerController().createNewAgent(name, "main.Drone", arguments).start();
 			}
 			catch (StaleProxyException exception) 
@@ -49,19 +50,19 @@ public class Display extends Agent
 				System.exit(-1);
 			}
 			
-			// on ajoute le drone créé dans la map des drones
+			// on ajoute le drone crï¿½ï¿½ dans la map des drones
 			m_drones.put(name, position);
 		}
 	
-		// création de l'interface graphique ; on lui passe la map des drones pour qu'elle initialise le terrain
-		// et une référence sur Display (je sais, c'est de la triche, mais c'est le seul moyen de faire fonctionner
+		// crï¿½ation de l'interface graphique ; on lui passe la map des drones pour qu'elle initialise le terrain
+		// et une rï¿½fï¿½rence sur Display (je sais, c'est de la triche, mais c'est le seul moyen de faire fonctionner
 		// le truc)
 		try
 		{
-			// paramètres à passer à l'agent GUI
+			// paramï¿½tres ï¿½ passer ï¿½ l'agent GUI
 			Object[] arguments = {m_drones, this};
 			
-			// création de l'agent GUI
+			// crï¿½ation de l'agent GUI
 			this.getContainerController().createNewAgent("GUI", "main.GUI", arguments).start();
 		}
 		catch (StaleProxyException exception) 
@@ -70,24 +71,26 @@ public class Display extends Agent
 			System.exit(-1);
 		}
 		
-		// le behaviour chargé de récupérer les positions des drones
+		// le behaviour chargï¿½ de rï¿½cupï¿½rer les positions des drones
 		addBehaviour(new RetrievePositions(this, Constants.m_retrievePositionsPeriod));
+		
+		addBehaviour(new DeathDetector(this));
 	}
 	
-	// une méthode pour mettre à jour la position d'un drone
+	// une mï¿½thode pour mettre ï¿½ jour la position d'un drone
 	void updatePosition(String drone, Position position)
 	{
 		m_drones.get(drone).setPosition(position);
 	}
 	
-	// une méthode pour avoir la map des drones (nom, position)
+	// une mï¿½thode pour avoir la map des drones (nom, position)
 	Map<String, Position> getDrones()
 	{
 		return m_drones;
 	}
 	
-	// une méthode qui renvoie une position libre ; notons que la méthode renvoie une position multiple
-	// de Constants.dotSize, car on veut que le terrain soit divisé en une grille de Constants.width x Constants.height
+	// une mï¿½thode qui renvoie une position libre ; notons que la mï¿½thode renvoie une position multiple
+	// de Constants.dotSize, car on veut que le terrain soit divisï¿½ en une grille de Constants.width x Constants.height
 	// cellules dont chaque cellule fait Constants.dotSize pixels de hauteur et largeur
 	Position getFreePosition()
 	{
@@ -101,52 +104,52 @@ public class Display extends Agent
 	}
 }
 
-// behaviour qui périodiquement update sa map de positions en questionnant les drones
+// behaviour qui pï¿½riodiquement update sa map de positions en questionnant les drones
 class RetrievePositions extends TickerBehaviour 
 {	
 	private static final long serialVersionUID = 1L;
 	
 	Display m_display = (Display) this.myAgent;
 	
-	// nombre de messages envoyés
+	// nombre de messages envoyï¿½s
 	int m_sent;
 
 	public RetrievePositions(Agent agent, long period) 
 	{
 		super(agent, period);
 		
-		// à l'initialisation du behaviour, on envoie un message à tous les drones
+		// ï¿½ l'initialisation du behaviour, on envoie un message ï¿½ tous les drones
 		sendToAll();
 	}
 
-	// cette méthode se lance périodiquement
+	// cette mï¿½thode se lance pï¿½riodiquement
 	public void onTick()
 	{	
 		ACLMessage message = m_display.receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 		
-		// si on a reçu un message de type INFORM (donc qui provient d'un drone puisque les messages INFORM
-		// qui arrivent à Display viennent forcément d'un drone)
+		// si on a reï¿½u un message de type INFORM (donc qui provient d'un drone puisque les messages INFORM
+		// qui arrivent ï¿½ Display viennent forcï¿½ment d'un drone)
 		if(message != null)
 		{
-			// on décrémente le nombre de messages attendus
+			// on dï¿½crï¿½mente le nombre de messages attendus
 			m_sent --;
 		/*	
-			// on récupère les paramètres du message JSON
+			// on rï¿½cupï¿½re les paramï¿½tres du message JSON
 			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
 			
-			// le paramètre id
+			// le paramï¿½tre id
 			int id = (int) parameters.get("id");
 			
-			// le paramètre position
+			// le paramï¿½tre position
 			Position position = (Position) parameters.get("position");
 			
 			// affichage pour voir ce qui se passe
-			// j'ai utilisé méthode getDistance() pour montrer ce qu'elle donne
-			// (méthode qui sera utile pour le filtrage des messages des drones entre eux)
-			System.out.println(message.getSender().getLocalName() + " a envoyé " + position.toString());
+			// j'ai utilisï¿½ mï¿½thode getDistance() pour montrer ce qu'elle donne
+			// (mï¿½thode qui sera utile pour le filtrage des messages des drones entre eux)
+			System.out.println(message.getSender().getLocalName() + " a envoyï¿½ " + position.toString());
 			*/
-			// si on reçu toutes les réponses, on renvoie une load de message
-			// (le paramètre m_sent est actualisé dans sendToAll())
+			// si on reï¿½u toutes les rï¿½ponses, on renvoie une load de message
+			// (le paramï¿½tre m_sent est actualisï¿½ dans sendToAll())
 			if(m_sent == 0)
 				sendToAll();
 		}
@@ -154,7 +157,7 @@ class RetrievePositions extends TickerBehaviour
 			block();
 	}
 	
-	// méthode qui envoie une requête de demande de positions à tous les drones
+	// mï¿½thode qui envoie une requï¿½te de demande de positions ï¿½ tous les drones
 	void sendToAll()
 	{
 		ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
@@ -166,5 +169,30 @@ class RetrievePositions extends TickerBehaviour
 		
 		// on attend autant de messages qu'il y a de drones
 		m_sent = m_display.m_drones.size();
+	}
+}
+
+class DeathDetector extends CyclicBehaviour
+{
+	private static final long serialVersionUID = 1L;
+	Display m_display = (Display) this.myAgent;
+	
+	public DeathDetector(Agent agent) 
+	{
+		super(agent);
+	}
+	
+	public void action()
+	{
+		ACLMessage message = m_display.receive(MessageTemplate.MatchPerformative(ACLMessage.FAILURE));
+		if (message != null)
+		{
+			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
+			int id = (int) parameters.get("id");
+			String name = "Drone"+Integer.toString(id);
+			m_display.m_drones.remove(name);
+		}
+		else
+			block();
 	}
 }
