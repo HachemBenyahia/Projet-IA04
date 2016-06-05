@@ -22,7 +22,7 @@ public class Constants
 	static int m_height = 40;
 	
 	// le nombre de drones sur le terrain
-	static int m_numberDrones = 20;
+	static int m_numberDrones = 8;
 	
 	// la taille d'une cellule sur le terrain (en pixels)
 	static int m_dotSize = 10;
