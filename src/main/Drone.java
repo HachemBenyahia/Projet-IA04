@@ -27,6 +27,10 @@ import jade.lang.acl.MessageTemplate;
  * </ul>
  * 
  * @see Constants#State
+ * @see RespondToDisplay
+ * @see EmitEnvironment
+ * @see	ReceiveEnvironment
+ * @see Movement
  */
 public class Drone extends Agent
 {
