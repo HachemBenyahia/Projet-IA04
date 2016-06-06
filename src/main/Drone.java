@@ -17,16 +17,20 @@ import jade.lang.acl.MessageTemplate;
 // classe Drone
 /**
  * <b>Drone est la classe représentant un individu de la flotte.</b>
- * <p>Un membre du SDZ est caractérisé par les informations suivantes : </p>
+ * <p>Un membre de la classe Drone est caractérisé par les informations suivantes : </p>
  * <ul>
  * 	<li>Un identifiant unique.</li>
  * 	<li>Sa position actuelle.</li>
  *	<li>La position que le drone veut atteindre.</li>
  * 	<li>L'état du drone.</li>
- * 	<li>Un Map qui contient la liste des membres de la flotte.<>
+ * 	<li>Un Map qui contient la liste des membres de la flotte.</li>
  * </ul>
  * 
  * @see Constants#State
+ * @see RespondToDisplay
+ * @see EmitEnvironment
+ * @see	ReceiveEnvironment
+ * @see Movement
  */
 public class Drone extends Agent
 {
