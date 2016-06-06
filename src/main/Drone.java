@@ -17,7 +17,7 @@ import jade.lang.acl.MessageTemplate;
 // classe Drone
 /**
  * <b>Drone est la classe représentant un individu de la flotte.</b>
- * <p>Un membre du SDZ est caractérisé par les informations suivantes : </p>
+ * <p>Un membre de la classe Drone est caractérisé par les informations suivantes : </p>
  * <ul>
  * 	<li>Un identifiant unique.</li>
  * 	<li>Sa position actuelle.</li>
