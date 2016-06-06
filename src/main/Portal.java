@@ -1,6 +1,13 @@
 package main;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.TickerBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 public class Portal extends Agent {
 	private static final long serialVersionUID = 1L;
@@ -10,7 +17,7 @@ public class Portal extends Agent {
 	Position m_position;
 	boolean m_isOpen;
 	
-	public void setup()
+	protected void setup()
 	{
 		Object[] arguments = this.getArguments();
 		
@@ -18,12 +25,56 @@ public class Portal extends Agent {
 		m_position = (Position) arguments[1];
 		m_nbDronesAccepted = (int) arguments[2];
 		m_isOpen = true;   // à l'initialisation, tous les portails sont ouverts
+		
+		addBehaviour(new PlacesBroadcast(this, Constants.m_emitEnvironmentPeriod));
+	}
+	
+	@SuppressWarnings("unchecked")
+	String toJSONArray()
+	{
+		JSONArray args = new JSONArray();
+		
+		JSONObject position = new JSONObject();
+		position.put("x", m_position.getX());
+		position.put("y", m_position.getY());
+		args.add(position);
+		
+		JSONObject nbDronesAccepted = new JSONObject();
+		nbDronesAccepted.put("nbDronesAccepted", m_nbDronesAccepted);
+		args.add(nbDronesAccepted);
+		
+		return args.toString();
 	}
 }
 
 
 // ajouter un behaviour qui périodiquement broadcast un message informant les drones aux alentours du nombre de 
 // drones que ce portail accepte
+
+class PlacesBroadcast extends TickerBehaviour
+{
+	private static final long serialVersionUID = 1L;
+	Portal m_portal = (Portal) this.myAgent;
+	
+	public PlacesBroadcast(Agent agent, long period) 
+	{
+		super(agent, period);
+	}
+	
+	public void onTick()
+	{
+		if (!m_portal.m_isOpen) return;
+		
+		ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+		message.setContent(m_portal.toJSONArray());
+		
+		// on envoit � tous les drones
+		for(int i = 0 ; i < Constants.m_numberDrones ; i ++)
+			message.addReceiver(new AID("Drone" + i, AID.ISLOCALNAME));
+		
+		m_portal.send(message);
+	}
+}
 
 
 // ajouter un behaviour qui écoute les messages venant de drones maitres. Ces messages sont envoyés par des maitres

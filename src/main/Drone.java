@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -401,64 +402,88 @@ class ReceiveEnvironment extends Behaviour
 		ACLMessage message = m_drone.receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 		
 		if(message != null)
-		{
-			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
-
-			Position position = (Position) parameters.get("position");
-			
-			// le drone �metteur est proche
-			if(m_drone.m_position.reachable(position))
-			{	
-				int id = (int) parameters.get("id");
+		{	
+			if (message.getSender().getLocalName().substring(0, 5).equals("Drone"))
+			{
+				Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
+				Position position = (Position) parameters.get("position");
 				
-				if(!m_drone.m_fleet.containsKey(new Integer(id)))
-				{
-					ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
-					reply.setContent(m_drone.toJSONArray());
-					reply.addReceiver(new AID("Drone" + id, AID.ISLOCALNAME));
-					m_drone.send(reply);
-				}
-				else
-				{
-					if(m_drone.idIsMaster(id))
-						m_drone.m_lastReception = System.currentTimeMillis();
-				}
-				
-				if(m_drone.m_position.equals(position))
-				{
-					System.out.println("collision");
-					ACLMessage deathMessage = new ACLMessage(ACLMessage.FAILURE);
-					deathMessage.addReceiver(new AID("Display", AID.ISLOCALNAME));
-					deathMessage.setContent(m_drone.toJSONArray());
-					m_drone.m_alive = false;
-					m_drone.send(deathMessage);
-					return;
-				}
-				
-				Map<Integer, Position> fleet = (Map<Integer, Position>) parameters.get("fleet");
-				//System.out.println("Drone " + m_drone.m_id + " : " + m_drone.m_fleet + " next : " + m_drone.nextInFleet() 
-				//+ " " + m_drone.m_state.toString());
-				
-				switch(m_drone.m_state)
-				{
-					case ALONE :
-						m_drone.m_state = Constants.State.FUSION;
+				// le drone �metteur est proche
+				if(m_drone.m_position.reachable(position))
+				{	
+					int id = (int) parameters.get("id");
+					
+					if(!m_drone.m_fleet.containsKey(new Integer(id)))
+					{
+						ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+						reply.setContent(m_drone.toJSONArray());
+						reply.addReceiver(new AID("Drone" + id, AID.ISLOCALNAME));
+						m_drone.send(reply);
+					}
+					else
+					{
+						if(m_drone.idIsMaster(id))
+							m_drone.m_lastReception = System.currentTimeMillis();
+					}
+					
+					if(m_drone.m_position.equals(position))
+					{
+						System.out.println("collision");
+						ACLMessage deathMessage = new ACLMessage(ACLMessage.FAILURE);
+						deathMessage.addReceiver(new AID("Display", AID.ISLOCALNAME));
+						deathMessage.setContent(m_drone.toJSONArray());
+						m_drone.m_alive = false;
+						m_drone.send(deathMessage);
+						return;
+					}
+					
+					Map<Integer, Position> fleet = (Map<Integer, Position>) parameters.get("fleet");
+					//System.out.println("Drone " + m_drone.m_id + " : " + m_drone.m_fleet + " next : " + m_drone.nextInFleet() 
+					//+ " " + m_drone.m_state.toString());
+					
+					switch(m_drone.m_state)
+					{
+						case ALONE :
+							m_drone.m_state = Constants.State.FUSION;
+							
+							m_drone.m_fleet.putAll(fleet);
+						break;
 						
-						m_drone.m_fleet.putAll(fleet);
-					break;
-					
-					case FUSION :
-						m_drone.m_state = Constants.State.FLEET;
-					break;
-					
-					case FLEET :
-						m_drone.m_fleet.putAll(fleet);
-						m_drone.m_fleet.replace(new Integer(id), position);
-					break;
-					
-					default :
-					break;
+						case FUSION :
+							m_drone.m_state = Constants.State.FLEET;
+						break;
+						
+						case FLEET :
+							m_drone.m_fleet.putAll(fleet);
+							m_drone.m_fleet.replace(new Integer(id), position);
+						break;
+						
+						default :
+						break;
+					}
 				}
+			}
+			
+			// mémorise l'emplacement des portails rencontrés
+			if (message.getSender().getLocalName().substring(0, 6).equals("Portal"))
+			{
+				try
+				{
+					JSONParser jsonParser = new JSONParser();
+					JSONArray args = (JSONArray) jsonParser.parse(message.getContent());
+					JSONObject positionJson = (JSONObject) args.get(0);
+					int x = Integer.parseInt((positionJson.get("x")).toString());
+					int y = Integer.parseInt((positionJson.get("y")).toString());
+					Position position = new Position(x,y);
+					
+					if(m_drone.m_position.reachable(position))
+						System.out.println("PORTAL X : " + position.getX() + " Y : " + position.getY());
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				
 			}
 		}
 	}

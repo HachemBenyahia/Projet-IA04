@@ -1,8 +1,8 @@
 package main;
 
-// classe simple qui représente une position (x, y)
+// classe simple qui reprï¿½sente une position (x, y)
 // elle deviendra notament utile pour le filtrage des distances
-// et autres calculs éventuels du genre
+// et autres calculs ï¿½ventuels du genre
 public class Position 
 {
 	int m_x, m_y;
@@ -113,7 +113,7 @@ public class Position
 		right();
 	}
 	
-	// modifie la position actuelle de manière à se rapprocher de l'objectif en paramètre
+	// modifie la position actuelle de maniï¿½re ï¿½ se rapprocher de l'objectif en paramï¿½tre
 	public void moveTowards(Position goal)
 	{
 		int x = goal.getX() - m_x;
@@ -144,7 +144,7 @@ public class Position
 			up();
 	}
 	
-	// génère une position aléatoire sur le terrain
+	// gï¿½nï¿½re une position alï¿½atoire sur le terrain
 	static public Position random()
 	{
 		int x = (int) (Math.round(Math.random() * (Constants.m_width - 1)) * Constants.m_dotSize);
@@ -153,13 +153,13 @@ public class Position
 		return new Position(x, y);
 	}
 	
-	// renvoie la distance au point passé en paramètre
+	// renvoie la distance au point passï¿½ en paramï¿½tre
 	public int getDistance(Position position)
 	{	
 		return (int) Math.round(Math.sqrt(Math.pow(position.getX() - m_x, 2) + Math.pow(position.getY() - m_y, 2)));
 	}
 	
-	// renvoie vrai si le signal on est à la portée de l'émetteur du signal
+	// renvoie vrai si le signal on est ï¿½ la portï¿½e de l'ï¿½metteur du signal
 	public boolean reachable(Position position)
 	{
 		if(getDistance(position) > Constants.m_maxRange)
