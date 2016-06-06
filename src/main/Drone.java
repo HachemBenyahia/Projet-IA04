@@ -23,7 +23,7 @@ import jade.lang.acl.MessageTemplate;
  * 	<li>Sa position actuelle.</li>
  *	<li>La position que le drone veut atteindre.</li>
  * 	<li>L'état du drone.</li>
- * 	<li>Un Map qui contient la liste des membres de la flotte.<>
+ * 	<li>Un Map qui contient la liste des membres de la flotte.</li>
  * </ul>
  * 
  * @see Constants#State
