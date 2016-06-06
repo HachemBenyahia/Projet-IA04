@@ -121,6 +121,6 @@ public class Constants
 	}
 	public static Long whiteColor()
 	{
-		return (Long) Math.round(Math.pow(2, 32));
+		return new Long((int) Math.pow(2, 32));
 	}
 }

@@ -24,10 +24,12 @@ public class GUI extends Agent
 	SDLSurface m_screen = null;
 	
 	// la map qui associe � chaque drone une surface (un carr� en l'occurence de taille Constants.dotSize)
-	Map<String, SDLSurface> m_surfaces = new HashMap<String, SDLSurface>();
+	Map<String, SDLSurface> m_dronesSurfaces = new HashMap<String, SDLSurface>();
+	Map<String, SDLSurface> m_portalsSurfaces = new HashMap<String, SDLSurface>();
 	
 	// map de couleurs
-	Map<String, Long> m_colors = new HashMap<String, Long>();
+	Map<String, Long> m_dronesColors = new HashMap<String, Long>();
+	Map<String, Long> m_portalsColors = new HashMap<String, Long>();
 	
 	// la map de drones de Display qui est r�cup�r�e et stock�e dans cet attribut
 	Map<String, Position> m_drones = null;
@@ -76,8 +78,8 @@ public class GUI extends Agent
         	for(Map.Entry<String, Position> entry : m_drones.entrySet())
     		{
     	        // initialisation des couleurs
-    	        m_colors.put(entry.getKey(), Constants.randomColor());
-        		
+    	        //m_dronesColors.put(entry.getKey(), Constants.randomColor());
+        		m_dronesColors.put(entry.getKey(), Constants.whiteColor());
     			// on cr�e une surface qui repr�sentant le drone en question (de taille carr�e = Constants.dotSize x Constant.dotSize)
     	    	SDLSurface surface = SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, Constants.m_dotSize, Constants.m_dotSize, 32, 0, 0, 0, 0);
     	    	
@@ -85,13 +87,23 @@ public class GUI extends Agent
     	    	SDLRect rect = new SDLRect(entry.getValue().getX(), entry.getValue().getY());
     	    	
     	    	// on colorie la surface
-    	    	surface.fillRect(m_colors.get(entry.getKey()).longValue());
+    	    	surface.fillRect(m_dronesColors.get(entry.getKey()).longValue());
     	 
     	    	// on affiche la surface � l'�cran � la position rect
     	        surface.blitSurface(m_screen, rect);
     	        
     	        // on stocke la surface pour pouvoir la mettre � jour au fur et � mesure du programme (c'est � dire modifier sa position)
-    	        m_surfaces.put(entry.getKey(), surface);
+    	        m_dronesSurfaces.put(entry.getKey(), surface);
+    		}
+        	
+        	for(Map.Entry<String, Position> entry : m_portals.entrySet())
+    		{
+    	        m_portalsColors.put(entry.getKey(), Constants.randomColor());
+    	    	SDLSurface surface = SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, Constants.m_dotSize, Constants.m_dotSize, 32, 0, 0, 0, 0);
+    	    	SDLRect rect = new SDLRect(entry.getValue().getX(), entry.getValue().getY());
+    	    	surface.fillRect(m_portalsColors.get(entry.getKey()).longValue());
+    	        surface.blitSurface(m_screen, rect);
+    	        m_portalsSurfaces.put(entry.getKey(), surface);
     		}
 		} 
         catch (SDLException exception) 
@@ -151,14 +163,20 @@ public class GUI extends Agent
 				
 				for(Map.Entry<String, Position> entry : m_drones.entrySet())
 				{
-					SDLSurface surface = m_surfaces.get(entry.getKey());
-					surface.fillRect(m_colors.get(entry.getKey()).longValue());
+					SDLSurface surface = m_dronesSurfaces.get(entry.getKey());
+					surface.fillRect(m_dronesColors.get(entry.getKey()).longValue());
+					surface.blitSurface(m_screen, new SDLRect(entry.getValue().getX(), entry.getValue().getY()));
+				}
+				for(Map.Entry<String, Position> entry : m_portals.entrySet())
+				{
+					SDLSurface surface = m_portalsSurfaces.get(entry.getKey());
+					surface.fillRect(m_portalsColors.get(entry.getKey()).longValue());
 					surface.blitSurface(m_screen, new SDLRect(entry.getValue().getX(), entry.getValue().getY()));
 				}
 				while(!m_deletedDrones.isEmpty())
 				{
 					Map.Entry<String, Position> deletedDrone = m_deletedDrones.poll();
-					SDLSurface surface = m_surfaces.get(deletedDrone.getKey());
+					SDLSurface surface = m_dronesSurfaces.get(deletedDrone.getKey());
 					surface.fillRect(Constants.whiteColor());
 					surface.blitSurface(m_screen, new SDLRect(deletedDrone.getValue().getX(), deletedDrone.getValue().getY()));
 				}
@@ -175,9 +193,9 @@ public class GUI extends Agent
         try
         {
         	// on lib�re les surfaces de la m�moire avant de quitter
-    		for(Map.Entry<String, SDLSurface> entry : m_surfaces.entrySet())
+    		for(Map.Entry<String, SDLSurface> entry : m_dronesSurfaces.entrySet())
     		{
-    	    	m_surfaces.get(entry.getKey()).freeSurface();
+    	    	m_dronesSurfaces.get(entry.getKey()).freeSurface();
     		}
     		
     		// surface de l'�cran
