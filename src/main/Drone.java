@@ -223,7 +223,7 @@ public class Drone extends Agent
 	}
 	
 	/**
-	 * Permet savoir quelle est le drone qui se trouve avant nous dans la liste de la flotte.
+	 * Permet de savoir quelle est le drone qui se trouve avant nous dans la liste de la flotte.
 	 * Si l'on est le maître elle retourne notre propre ID.
 	 * @return L'ID du drone qui se trouve avant nous dans la liste.
 	 * @see Drone#m_fleet
@@ -247,7 +247,7 @@ public class Drone extends Agent
 	}
 	
 	/**
-	 * Permet savoir la position destin de ce drone
+	 * Permet de savoir la position destin de ce drone
 	 * Si l'on est le maître elle retourne la position destin originale, c'est-à-dire, comme si le dron était tout seul.
 	 * Si l'on n'est pas le maìtre, on calcule la position destin en fonction de la position destin du maître de la flotte.
 	 
@@ -268,7 +268,7 @@ public class Drone extends Agent
 	}
 	
 	/**
-	 * Permet savoir si un ID donné correspond avec celui de notre maître.
+	 * Permet de savoir si un ID donné correspond avec celui de notre maître.
 	 * @param id
 	 * 	L'ID que l'on veut comparer avec celui de notre maître
 	 * @return Le résultat de la comparaison
@@ -286,7 +286,7 @@ public class Drone extends Agent
 	}
 	
 	/**
-	 * Permet connaître l'index que l'on occupe dans la liste d'éléments de la flotte.
+	 * Permet de connaître l'index que l'on occupe dans la liste d'éléments de la flotte.
 	 * @return L'index que l'on occupe parmi les éléments de la flotte.
 	*/
 	public int getIndexInFleet()
@@ -305,7 +305,7 @@ public class Drone extends Agent
 	}
 	
 	/**
-	 * Permet remplacer le maître si le temps passé est supérieur à 3000 millisecondes.
+	 * Permet de remplacer le maître si le temps passé est supérieur à 3000 millisecondes.
 	*/
 	public void updateMaster()
 	{
