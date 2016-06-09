@@ -13,9 +13,53 @@ import sdljava.video.SDLRect;
 import sdljava.video.SDLSurface;
 import sdljava.video.SDLVideo;
 
-// classe utilisant la librairie sdljava pour repr�senter les drones graphiquement
-// je ne vais pas trop d�tailler le fonctionnement, il faut regarder la doc pour comprendre
-// comment elle fonctionne, mais elle n'est pas tr�s compliqu�e � utiliser
+// classe utilisant la librairie sdljava pour représente les drones graphiquement
+// je ne vais pas trop détailler le fonctionnement, il faut regarder la doc pour comprendre
+// comment elle fonctionne, mais elle n'est pas très compliquée à utiliser
+/**
+ * <b>GUI est la classe qui s'occupe de la répresentation graphique des drones.</b>
+ * <p>Cette classe utilise la bibliothèque sldjava pour afficher la grille,
+ * les drones et le reste de composants de la modélisation, cet agent recoit périodiquement
+ * des message de la part de l'agent Display avec les nouvelles positions des drones et d'autres événements à afficher.</p>
+ * <p>Pour mener à bien son travail, l'agent GUI dispose de suivantes composantes :</p>
+ * <ul>
+ * 	<li>L'écran principale.</li>
+ * 	<li>Le map contenant la positions des drones.</li>
+ *	<li>La position que le drone veut atteindre.</li>
+ * 	<li>L'état du drone.</li>
+ * 	<li>Un Map qui contient la liste des membres de la flotte.</li>
+ * </ul>
+ * 
+ * 
+ * 
+ * 	// surface �cran c'est la surface principale (la surface noire en fond)
+	SDLSurface m_screen = null;
+	
+	// la map qui associe � chaque drone une surface (un carr� en l'occurence de taille Constants.dotSize)
+	Map<String, SDLSurface> m_surfaces = new HashMap<String, SDLSurface>();
+	
+	// map de couleurs
+	Map<String, Long> m_colors = new HashMap<String, Long>();
+	
+	// la map de drones de Display qui est r�cup�r�e et stock�e dans cet attribut
+	Map<String, Position> m_drones = null;
+	
+	Map<String, Position> m_last_drones_state = null;
+	
+	Queue<Map.Entry<String, Position>> m_deletedDrones = null;
+	
+	// le bool�en de boucle principale
+	boolean m_running = true;
+	
+	// la r�f�rence vers l'agent Display
+	Display m_display = null;
+ * 
+ * @see Constants#State
+ * @see RespondToDisplay
+ * @see EmitEnvironment
+ * @see	ReceiveEnvironment
+ * @see Movement
+ */
 public class GUI extends Agent
 {
 	private static final long serialVersionUID = 1L;
@@ -31,7 +75,9 @@ public class GUI extends Agent
 	
 	// la map de drones de Display qui est r�cup�r�e et stock�e dans cet attribut
 	Map<String, Position> m_drones = null;
+	
 	Map<String, Position> m_last_drones_state = null;
+	
 	Queue<Map.Entry<String, Position>> m_deletedDrones = null;
 	
 	// le bool�en de boucle principale
@@ -49,7 +95,7 @@ public class GUI extends Agent
 		
 		m_drones =  (Map<String, Position>) arguments[0];
 		m_display = (Display) arguments[1];
-		m_deletedDrones = new ArrayBlockingQueue<Map.Entry<String, Position>>(Constants.m_numberDrones);
+		m_deletedDrones = new ArrayBlockingQueue <Map.Entry<String, Position>>(Constants.m_numberDrones);
 		
         try 
         {
