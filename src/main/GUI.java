@@ -102,6 +102,15 @@ public class GUI extends Agent
 	 * 
 	*/
 	@SuppressWarnings("unchecked")
+	/**
+	 * Dans cette méthode on récupère périodiquement les positions des drones et on les affiche à l'écran,
+	 * on efface aussi les drones qui on été supprimés. L'agent Display s'occupe de fournir la liste de positions
+	 * actualisées.
+	 * 
+	 * @see Display#getDrones
+	 * @see Constants#m_dotSize
+	 * @see Constants#randomColor
+	*/
 	protected void setup() 
 	{
 		// On récupère les arguments passés lors de la création de l'agent
@@ -115,7 +124,7 @@ public class GUI extends Agent
 	        {
 	        	// Initialisation de la gui
 			SDLMain.init(SDLMain.SDL_INIT_VIDEO);
-	        	// Initialisation de l'�cran
+	        	// Initialisation de l'écran
 			m_screen = SDLVideo.setVideoMode(Constants.m_pWidth, Constants.m_pHeight, 32, SDLVideo.SDL_DOUBLEBUF | SDLVideo.SDL_HWSURFACE);
 		        // Caption de la fenètre (titre)
 		        SDLVideo.wmSetCaption("Flotte de drones en 2D", null);
@@ -156,7 +165,7 @@ public class GUI extends Agent
 			System.exit(-1);
 		}
 		
-        // boucle principale
+        	// boucle principale
         	while(m_running) 
         	{  
         		// On recupère la liste de drones, moyennement l'agent Display
