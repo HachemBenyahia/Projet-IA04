@@ -603,9 +603,8 @@ class Movement extends TickerBehaviour
 	 * @param period
 	 * 		la période entre chaque exécution du comportement.
 	 * 
-	 * @see Constants#m_emitEnvironmentPeriod
+	 * @see Constants#m_movementPeriod
 	 * @see Drone
-	 * @see ReceiveEnvironment
 	*/
 	public Movement(Agent agent, long period) 
 	{
@@ -613,6 +612,16 @@ class Movement extends TickerBehaviour
 		m_drone = (Drone) agent;
 	}
 	
+	/**
+	 * C'est la méthode qui s'effectue périodiquement pour modifier sa position d'après l'état du drone.
+	 * Si le drone n'est plus vivant, aucune action n'est effectuée. Un drone qui est seul déambulera librement
+	 * dans le terrain, alors qu'un drone qui appartient à une flotte suivra à son maître, finalement, un maître 
+	 * agira comme un drone seul.
+	 * 
+	 * @see Drone
+	 * @see Constants#State
+	 * @see Constant#m_movementPeriod
+	*/
 	protected void onTick() 
 	{	
 		//Si le drone n'est plus vivant, on ne fait rien
@@ -657,3 +666,4 @@ class Movement extends TickerBehaviour
 		}
 	}
 }
+
