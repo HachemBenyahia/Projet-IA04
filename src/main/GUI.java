@@ -23,57 +23,46 @@ import sdljava.video.SDLVideo;
  * des message de la part de l'agent Display avec les nouvelles positions des drones et d'autres événements à afficher.</p>
  * <p>Pour mener à bien son travail, l'agent GUI dispose de suivantes composantes :</p>
  * <ul>
- * 	<li>L'écran principale.</li>
- * 	<li>Le map contenant la positions des drones.</li>
- *	<li>La position que le drone veut atteindre.</li>
- * 	<li>L'état du drone.</li>
- * 	<li>Un Map qui contient la liste des membres de la flotte.</li>
+ * 	<li>L'écran principal.</li>
+ * 	<li>La mappe contenant les positions des drones.</li>
+ * 	<li>La mappe contenant la couleur associée à chaque drone.</li>
+ * 	<li>La mappe contenant la surface associée à chaque drone.</li>
+ * 	<li>La mappe contenant les positions précédentes des drones.</li>
+ * 	<li>La queue contenant la liste de drones suprimés.</li>
+ * 	<li>Un booléen indiquant la fin de la simulation.</li>
+ * 	<li>Une référence vers l'agent Display.</li>
  * </ul>
  * 
- * 
- * 
- * 	// surface �cran c'est la surface principale (la surface noire en fond)
-	SDLSurface m_screen = null;
-	
-	// la map qui associe � chaque drone une surface (un carr� en l'occurence de taille Constants.dotSize)
-	Map<String, SDLSurface> m_surfaces = new HashMap<String, SDLSurface>();
-	
-	// map de couleurs
-	Map<String, Long> m_colors = new HashMap<String, Long>();
-	
-	// la map de drones de Display qui est r�cup�r�e et stock�e dans cet attribut
-	Map<String, Position> m_drones = null;
-	
-	Map<String, Position> m_last_drones_state = null;
-	
-	Queue<Map.Entry<String, Position>> m_deletedDrones = null;
-	
-	// le bool�en de boucle principale
-	boolean m_running = true;
-	
-	// la r�f�rence vers l'agent Display
-	Display m_display = null;
- * 
- * @see Constants#State
- * @see RespondToDisplay
- * @see EmitEnvironment
- * @see	ReceiveEnvironment
- * @see Movement
+ * @see Constants#randomColor
+ * @see Drone
+ * @see Display
  */
 public class GUI extends Agent
 {
 	private static final long serialVersionUID = 1L;
 
-	// surface �cran c'est la surface principale (la surface noire en fond)
+	// C'est la surface principale (la surface noire en fond)
+	/**
+	 * L'écran principal, colorié en noir par défaut.
+	*/
 	SDLSurface m_screen = null;
 	
 	// la map qui associe � chaque drone une surface (un carr� en l'occurence de taille Constants.dotSize)
+	
+	/**
+	 * La mappe contenant la surface associée à chaque drone.
+	*/
 	Map<String, SDLSurface> m_surfaces = new HashMap<String, SDLSurface>();
 	
 	// map de couleurs
 	Map<String, Long> m_colors = new HashMap<String, Long>();
 	
 	// la map de drones de Display qui est r�cup�r�e et stock�e dans cet attribut
+	/**
+	 * La mappe contenant les positions des drones, l'agent display s'occupe de fournir la liste actualisée de positions.
+	 * 
+	 * @see Display#getDrones
+	*/
 	Map<String, Position> m_drones = null;
 	
 	Map<String, Position> m_last_drones_state = null;
@@ -97,55 +86,54 @@ public class GUI extends Agent
 		m_display = (Display) arguments[1];
 		m_deletedDrones = new ArrayBlockingQueue <Map.Entry<String, Position>>(Constants.m_numberDrones);
 		
-        try 
-        {
-        	// initialisation de la gui
+	        try 
+	        {
+	        	// initialisation de la gui
 			SDLMain.init(SDLMain.SDL_INIT_VIDEO);
-			
-        	// initialisation de l'�cran
+	        	// initialisation de l'�cran
 			m_screen = SDLVideo.setVideoMode(Constants.m_pWidth, Constants.m_pHeight, 32, SDLVideo.SDL_DOUBLEBUF | SDLVideo.SDL_HWSURFACE);
-	        // caption de la fen�tre (titre)
-	        SDLVideo.wmSetCaption("Flotte de drones en 2D", null);
+		        // caption de la fen�tre (titre)
+		        SDLVideo.wmSetCaption("Flotte de drones en 2D", null);
 		} 
-        catch (SDLException exception) 
-        {
+	        catch (SDLException exception) 
+	        {
 			exception.printStackTrace();
 			System.exit(-1);
 		}
        
-        try 
-        {
-        	for(Map.Entry<String, Position> entry : m_drones.entrySet())
-    		{
-    	        // initialisation des couleurs
-    	        m_colors.put(entry.getKey(), Constants.randomColor());
-        		
-    			// on cr�e une surface qui repr�sentant le drone en question (de taille carr�e = Constants.dotSize x Constant.dotSize)
-    	    	SDLSurface surface = SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, Constants.m_dotSize, Constants.m_dotSize, 32, 0, 0, 0, 0);
-    	    	
-    	    	// on assigne une position � la surface, donn�e dans la map des drones pass�e en param�tre
-    	    	SDLRect rect = new SDLRect(entry.getValue().getX(), entry.getValue().getY());
-    	    	
-    	    	// on colorie la surface
-    	    	surface.fillRect(m_colors.get(entry.getKey()).longValue());
-    	 
-    	    	// on affiche la surface � l'�cran � la position rect
-    	        surface.blitSurface(m_screen, rect);
-    	        
-    	        // on stocke la surface pour pouvoir la mettre � jour au fur et � mesure du programme (c'est � dire modifier sa position)
-    	        m_surfaces.put(entry.getKey(), surface);
-    		}
+	        try 
+	        {
+	        	for(Map.Entry<String, Position> entry : m_drones.entrySet())
+	    		{
+	    	        	// initialisation des couleurs
+	    	        	m_colors.put(entry.getKey(), Constants.randomColor());
+	        		
+	    			// on cr�e une surface qui repr�sentant le drone en question (de taille carr�e = Constants.dotSize x Constant.dotSize)
+	    	    		SDLSurface surface = SDLVideo.createRGBSurface(SDLVideo.SDL_HWSURFACE, Constants.m_dotSize, Constants.m_dotSize, 32, 0, 0, 0, 0);
+	    	    	
+	    	    		// on assigne une position � la surface, donn�e dans la map des drones pass�e en param�tre
+	    	    		SDLRect rect = new SDLRect(entry.getValue().getX(), entry.getValue().getY());
+	    	    	
+	    	    		// on colorie la surface
+	    	    		surface.fillRect(m_colors.get(entry.getKey()).longValue());
+	    	 
+	    	    		// on affiche la surface � l'�cran � la position rect
+	    	        	surface.blitSurface(m_screen, rect);
+	    	        
+	    	        	// on stocke la surface pour pouvoir la mettre � jour au fur et � mesure du programme (c'est � dire modifier sa position)
+	    	        	m_surfaces.put(entry.getKey(), surface);
+	    		}
 		} 
-        catch (SDLException exception) 
-        {
+	        catch (SDLException exception) 
+	        {
 			exception.printStackTrace();
 			System.exit(-1);
 		}
 		
         // boucle principale
-        while(m_running) 
-        {  
-        	m_drones = m_display.getDrones();
+        	while(m_running) 
+        	{  
+        		m_drones = m_display.getDrones();
 			try 
 			{
 				// on attend un �v�nement de mani�re non bloquante
@@ -156,12 +144,14 @@ public class GUI extends Agent
 					switch (event.getType()) 
 					{
 						// si on clique sur la croix rouge de la gui, on quitte la boucle
-		             	case SDLEvent.SDL_QUIT:    
-		             		m_running = false;    
-		             	break;
-		            }
+		             			case SDLEvent.SDL_QUIT:    
+		             				m_running = false;    
+		             				break;
+		             			default:
+		             				break;
+		            		}
 				}
-			} 
+			}
 			catch (SDLException exception) 
 			{
 				exception.printStackTrace();
@@ -219,17 +209,17 @@ public class GUI extends Agent
         	// on lib�re les surfaces de la m�moire avant de quitter
     		for(Map.Entry<String, SDLSurface> entry : m_surfaces.entrySet())
     		{
-    	    	m_surfaces.get(entry.getKey()).freeSurface();
+    	    		m_surfaces.get(entry.getKey()).freeSurface();
     		}
     		
     		// surface de l'�cran
     		m_screen.freeSurface();
-		} 
+	} 
         catch(SDLException exception) 
         {
-			exception.printStackTrace();
-			System.exit(-1);
-		}
+		exception.printStackTrace();
+		System.exit(-1);
+	}
         
         // on quitte la gui (fermeture de la fen�tre)
         SDLMain.quit();
@@ -238,3 +228,4 @@ public class GUI extends Agent
         System.exit(0);
 	}
 }
+
