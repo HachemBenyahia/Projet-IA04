@@ -23,7 +23,7 @@ import jade.lang.acl.MessageTemplate;
  * 	<li>Sa position actuelle.</li>
  *	<li>La position que le drone veut atteindre.</li>
  * 	<li>L'état du drone.</li>
- * 	<li>Un Map qui contient la liste des membres de la flotte.</li>
+ * 	<li>Une mappe qui contient la liste des membres de la flotte.</li>
  * </ul>
  * 
  * @see Constants#State
@@ -329,7 +329,7 @@ public class Drone extends Agent
 /**
  * <b>RespondToDisplay est le comportement d'un agent Drone qui s'occupe de répondre aux requêtes de l'agent
  * Display en lui envoyant les informations du drone, il s'agit d'un CyclicBehaviour.</b>
- * <p>Pour effectuer sa tâche, la classe ne possède que d'un champ : une référence vers l'agent auquel il appartient.</p>
+ * <p>Pour effectuer sa tâche, la classe ne possède qu'un champ : une référence vers l'agent auquel il appartient.</p>
  * 
  * @see Drone
  * @see RetrievePositions 
@@ -385,7 +385,7 @@ class RespondToDisplay extends CyclicBehaviour
 /**
  * <b>EmitEnvironment est le comportement d'un agent Drone qui s'occupe d'envoyer périodiquement
  * ses coordonnées aux autres drones, il s'agit d'un TickerBehaviour.</b>
- * <p>Pour effectuer sa tâche, la classe ne possède que d'un champ : une référence vers l'agent auquel il appartient.</p>
+ * <p>Pour effectuer sa tâche, la classe ne possède qu'un champ : une référence vers l'agent auquel il appartient.</p>
  * 
  * @see Drone
  * @see Constants#m_emitEnvironmentPeriod
@@ -445,34 +445,64 @@ class EmitEnvironment extends TickerBehaviour
 	}
 }
 
-// behaviour qui analyse les messages re�us des autres drones
+// behaviour qui analyse les messages recus des autres drones
+/**
+ * <b>ReceiveEnvironment est le comportement de l'agent drone qui s'occupe de mettre à jour la liste des 
+ * positions actuelles de drones de la flotte, ainsi que l'état du drone. Il s'agit d'un Behaviour simple.</b>
+ * <p>Pour effectuer sa tâche, la classe ne possède qu'un champ : Une référence vers l'agent drone auquel il appartien.</p>
+ * 
+ * @see Display
+ * @see EmitEnvironment
+ */
 class ReceiveEnvironment extends Behaviour
 {
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * C'est une référence vers l'agent drone auquel ce comportement appartient.
+	*/
 	Drone m_drone;
 	
+	/**
+	 * C'est le constructeur de la classe, il recoit en argument l'agent auquel il appartient.
+	 * 
+	 * @param drone
+	 * 		L'agent drone auquel le comportement appartient.
+	 * 
+	 * @see Drone
+	*/
 	public ReceiveEnvironment(Drone drone) 
 	{
 		m_drone = drone;
 	}
 
 	@SuppressWarnings("unchecked")
+	/**
+	 * C'est la méthode permet d'actualiser la liste des positions des autres drones de la flotte
+	 * et l'état du drone, également on peut rajouter un drone à la flotte s'il est assez proche.
+	 * Finalement, cette méthode permet aussi de déterminer s'il y a eu une colision entre deux drones.
+	 * 
+	 * @see EmitEnvironment
+	 * @see DeathDetector 
+	 * @see Drone#toJSONArray
+	*/
 	public void action() 
 	{
 		ACLMessage message = m_drone.receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
 		
-		if(message != null)
+		if( message != null )
 		{
 			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
 
 			Position position = (Position) parameters.get("position");
 			
-			// le drone �metteur est proche
-			if(m_drone.m_position.reachable(position))
+			// le drone émetteur est proche
+			if( m_drone.m_position.reachable(position) )
 			{	
+				// On recupère l'ID du drone émetteur
 				int id = (int) parameters.get("id");
 				
+				//S'il ne fait pas partie de la flotte, on lui envoie une réponse.
 				if(!m_drone.m_fleet.containsKey(new Integer(id)))
 				{
 					ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
@@ -480,12 +510,16 @@ class ReceiveEnvironment extends Behaviour
 					reply.addReceiver(new AID("Drone" + id, AID.ISLOCALNAME));
 					m_drone.send(reply);
 				}
+				
+				//S'il fait déjà partie de la flotte
 				else
 				{
+					//S'il est le maître, on récupère le temps de la réception
 					if(m_drone.idIsMaster(id))
-						m_drone.m_lastReception = System.currentTimeMillis();
+						{ m_drone.m_lastReception = System.currentTimeMillis(); } 
 				}
 				
+				//S'il y a eu une colision, on envoie un message et on meurt x_x
 				if(m_drone.m_position.equals(position))
 				{
 					System.out.println("collision");
@@ -497,73 +531,117 @@ class ReceiveEnvironment extends Behaviour
 					return;
 				}
 				
+				// On recupère la flotte du drone émetteur
 				Map<Integer, Position> fleet = (Map<Integer, Position>) parameters.get("fleet");
 				//System.out.println("Drone " + m_drone.m_id + " : " + m_drone.m_fleet + " next : " + m_drone.nextInFleet() 
 				//+ " " + m_drone.m_state.toString());
 				
 				switch(m_drone.m_state)
 				{
+					//Si le drone était seul, on commence une fusion
 					case ALONE :
 						m_drone.m_state = Constants.State.FUSION;
-						
 						m_drone.m_fleet.putAll(fleet);
-					break;
+						break;
 					
+					//Si le drone était en train de se fusioner, il devient partie de la flotte
 					case FUSION :
 						m_drone.m_state = Constants.State.FLEET;
-					break;
+						break;
 					
+					//Si le drone faisait déjà partie de la flotte, on remplace la position ancienne par la nouvelle
 					case FLEET :
 						m_drone.m_fleet.putAll(fleet);
 						m_drone.m_fleet.replace(new Integer(id), position);
-					break;
+						break;
 					
 					default :
-					break;
+						break;
 				}
 			}
 		}
 	}
 	
-	public boolean done() {
+	//Ce comportement s'effectue pendant que le drone soit vivant
+	/**
+	 * Cette fonction permet de savoir si le comportement s'est déjà terminé,
+	 * le comportement se finit lorsque le drone meurt.
+	 * 
+	 * @return Un boléean indiquant si le comportement s'est terminé.
+	*/
+	public boolean done()
+	{
 		return !m_drone.m_alive;
 	}
 }
 
-// classe qui g�re le mouvement d'un drone
+// classe qui gère le mouvement d'un drone
+/**
+ * <b>Movement est le comportement d'un agent Drone qui s'occupe de
+ * modifier périodiquement sa position d'après l'état du drone, il s'agit donc d'un TickerBehaviour.</b>
+ * <p>Pour effectuer sa tâche, la classe ne possède qu'un champ : une référence vers l'agent auquel il appartient.</p>
+ * 
+ * @see Drone
+ * @see Constants#State
+ * @see Constant#m_movementPeriod
+ */
 class Movement extends TickerBehaviour
 {
 	private static final long serialVersionUID = 1L;
-
+	
+	/**
+	 * C'est une référence vers l'agent drone auquel ce comportement appartient.
+	*/
 	Drone m_drone;
 	
+	/**
+	 * C'est le constructeur de la classe, il recoit en argument l'agent auquel il appartient et la période
+	 * entre chaque exécution.
+	 * 
+	 * @param agent
+	 * 		L'agent auquel le comportement appartient.
+	 * @param period
+	 * 		la période entre chaque exécution du comportement.
+	 * 
+	 * @see Constants#m_emitEnvironmentPeriod
+	 * @see Drone
+	 * @see ReceiveEnvironment
+	*/
 	public Movement(Agent agent, long period) 
 	{
 		super(agent, period);
-
 		m_drone = (Drone) agent;
 	}
-
+	
 	protected void onTick() 
 	{	
-		if (!m_drone.m_alive) return;
+		//Si le drone n'est plus vivant, on ne fait rien
+		if (!m_drone.m_alive)
+			{ return; }
+			
 		switch(m_drone.m_state)
 		{
+			// Si le drone est seul, il se déplace vers son objectif
 			case ALONE :
 				m_drone.m_position.moveTowards(m_drone.m_goal);
-				
+				// Si le drone a achevé son objectif, on génère un nouveau
 				if(m_drone.reachedGoal())
-					m_drone.generateGoal();
-			break;
+					{ m_drone.generateGoal(); } 
+				break;
 			
+			// Si le drone appartient à une flotte
 			case FLEET :
+				// Si le drone est le maître 
 				if(m_drone.isMaster())
 				{
+					// S'il a achevé son objectif, on génère un nouveau
 					if(m_drone.reachedGoal())
 						m_drone.generateGoal();
 				}
+				// sinon 
 				else
 				{
+					// On actualise le maître et on actualise l'objectif
 					m_drone.updateMaster();
 					m_drone.m_goal = m_drone.goalInFleet();
 				}
@@ -571,8 +649,11 @@ class Movement extends TickerBehaviour
 				m_drone.m_position.moveTowards(m_drone.m_goal);
 			break;
 			
+			// Sinon, on ne fait rien
 			case FUSION :
-			break;
+				break;
+			default:
+				break;
 		}
 	}
 }
