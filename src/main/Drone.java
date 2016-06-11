@@ -325,25 +325,50 @@ public class Drone extends Agent
 	}
 }
 
-// behaviour qui r�pond � Display quand il lui demande quelque chose
+// behaviour qui répond à l'agent Display quand il fait une requête
+/**
+ * <b>RespondToDisplay est le comportement d'un agent Drone qui s'occupe de répondre aux requêtes de l'agent
+ * Display en lui envoyant les informations du drone, il s'agit d'un CyclicBehaviour.</b>
+ * <p>Pour effectuer sa tâche, la classe ne possède que d'un champ : une référence vers l'agent auquel il appartient.</p>
+ * 
+ * @see Drone
+ * @see RetrievePositions 
+ */
 class RespondToDisplay extends CyclicBehaviour
 {
 	private static final long serialVersionUID = 1L;
 	
+	/**
+	 * Une référence vers l'agent Drone auquel il appartient.
+	*/
 	Drone m_drone;
 
+	/**
+	 * C'est le constructeur de la classe, il recoit en argument l'agent auquel il appartient.
+	 * 
+	 * @param drone
+	 * 		L'agent drone auquel le comportement appartient.
+	 * 
+	 * @see Drone
+	*/
 	public RespondToDisplay(Drone drone) 
 	{
 		m_drone = drone;
 	}
-
+	
+	/**
+	 * C'est la méthode permet de répondre aux requêtes de l'agent Display et de lui envoyer les informations du drone. 
+	 * 
+	 * @see RetrievePositions
+	 * @see Drone#toJSONArray
+	*/
 	public void action() 
 	{	
 		ACLMessage message = m_drone.receive(MessageTemplate.MatchSender(new AID("Display", AID.ISLOCALNAME)));
 		
-		// si on a bien re�u un message de Display, on lui r�pond avec un INFORM
-		// dans lequel on envoie les informations en question au format JSON
-		if(message != null)
+		// Si l'on a bien recu un message de Display, on lui répond avec un INFORM
+		// dans lequel on envoie les informations sous format JSON
+		if( message != null )
 		{
 			ACLMessage reply = message.createReply();
 			reply.setPerformative(ACLMessage.INFORM);
@@ -352,36 +377,69 @@ class RespondToDisplay extends CyclicBehaviour
 			m_drone.send(reply);
 		}
 		else
-			block();
+			{ block(); }
 	}
 }
 
 // behaviour qui �met des caract�ristiques du drone en permanence
+/**
+ * <b>EmitEnvironment est le comportement d'un agent Drone qui s'occupe d'envoyer périodiquement
+ * ses coordonnées aux autres drones, il s'agit d'un TickerBehaviour.</b>
+ * <p>Pour effectuer sa tâche, la classe ne possède que d'un champ : une référence vers l'agent auquel il appartient.</p>
+ * 
+ * @see Drone
+ * @see Constants#m_emitEnvironmentPeriod
+ * @see RetrievePositions
+ * @see ReceiveEnvironment
+ */
 class EmitEnvironment extends TickerBehaviour
 {
 	private static final long serialVersionUID = 1L;
-
+	
+	/**
+	 * C'est une référence vers l'agent drone auquel ce comportement appartient.
+	*/
 	Drone m_drone;
 	
+	
+	/**
+	 * C'est le constructeur de la classe, il recoit en argument l'agent auquel il appartient et la période
+	 * entre chaque exécution.
+	 * 
+	 * @param agent
+	 * 		L'agent auquel le comportement appartient.
+	 * @param period
+	 * 		la période entre chaque exécution du comportement.
+	 * 
+	 * @see Constants#m_emitEnvironmentPeriod
+	 * @see Drone
+	 * @see ReceiveEnvironment
+	*/
 	public EmitEnvironment(Agent agent, long period) 
 	{
 		super(agent, period);
-
 		m_drone = (Drone) agent;
 	}
-
+	
+	/**
+	 * C'est la méthode qui s'effectue périodiquement pour envoyer les informations du drones
+	 * aus autres drones. Si le drone n'est plus vivant, aucune action n'est effectuée.
+	 * 
+	 * @see Constants#m_emitEnvironmentPeriod
+	 * @see Drone#toJSONArray
+	*/
 	protected void onTick() 
 	{
-		if (!m_drone.m_alive) return;
+		if ( !m_drone.m_alive )
+			{ return; }
 		
 		ACLMessage message = new ACLMessage(ACLMessage.INFORM);
-
 		message.setContent(m_drone.toJSONArray());
 		
-		// on envoit � tous les drones sauf soi-m�me
-		for(int i = 0 ; i < Constants.m_numberDrones ; i ++)
-			if(i != m_drone.m_id)
-				message.addReceiver(new AID("Drone" + i, AID.ISLOCALNAME));
+		// Il envoit ses informations à tous les drones, sauf à soi-même
+		for( int i = 0 ; i < Constants.m_numberDrones ; i ++ )
+			if( i != m_drone.m_id )
+				{ message.addReceiver(new AID("Drone" + i, AID.ISLOCALNAME)); }
 		
 		m_drone.send(message);
 	}
