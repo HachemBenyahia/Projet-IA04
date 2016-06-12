@@ -1,7 +1,9 @@
 package main;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.json.simple.JSONArray;
@@ -356,6 +358,14 @@ public class Drone extends Agent
 		
 	//	if(m_fleet.size() == 1)
 		//	m_state = Constants.State.ALONE;
+	}
+	
+	public void initiateLandingRequest(String portalName)
+	{
+		ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+		message.addReceiver(new AID(portalName, AID.ISLOCALNAME));
+		message.setContent(this.toJSONArray());
+		this.send(message);
 	}
 }
 
@@ -818,31 +828,17 @@ class CheckPortalPossibility extends TickerBehaviour
 	
 	public void onTick()
 	{
-		// pour chaque portail enregistré, vérifier si il est possible d'envoyer des drones.
-			// début d'une requete atterissage
-			// si oui, créer un SendToPortal
+		Iterator<Entry<String, Integer>> ite = m_drone.m_knowPortalsNbDronesAccepted.entrySet().iterator();
+		
+		while (ite.hasNext())
+		{
+			Entry<String, Integer> portalCapacity = ite.next();
+			
+			if (m_drone.m_fleet.size() >= portalCapacity.getValue())
+			{
+				this.m_drone.initiateLandingRequest(portalCapacity.getKey());
+				
+			}
+		}
 	}
-}
-
-
-class InitiateLandingRequest extends OneShotBehaviour
-{
-	private static final long serialVersionUID = 1L;
-	
-	Drone m_drone;
-	String m_portalName;
-	
-	public InitiateLandingRequest(Drone drone, String portalName)
-	{
-		super();
-		m_drone = drone;
-		m_portalName = portalName;
-	}
-
-	public void action() {
-		ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
-		message.addReceiver(new AID(m_portalName, AID.ISLOCALNAME));
-		message.setContent(m_drone.toJSONArray());
-	}
-	
 }
