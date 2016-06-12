@@ -30,20 +30,18 @@ public class Portal extends Agent {
 	}
 	
 	@SuppressWarnings("unchecked")
-	String toJSONArray()
+	String toJson()
 	{
-		JSONArray args = new JSONArray();
+		JSONObject args = new JSONObject();
 		
 		JSONObject position = new JSONObject();
 		position.put("x", m_position.getX());
 		position.put("y", m_position.getY());
-		args.add(position);
+		args.put("position", position);
 		
-		JSONObject nbDronesAccepted = new JSONObject();
-		nbDronesAccepted.put("nbDronesAccepted", m_nbDronesAccepted);
-		args.add(nbDronesAccepted);
+		args.put("nbDronesAccepted", m_nbDronesAccepted);
 		
-		return args.toString();
+		return args.toJSONString();
 	}
 }
 
@@ -66,7 +64,7 @@ class PlacesBroadcast extends TickerBehaviour
 		if (!m_portal.m_isOpen) return;
 		
 		ACLMessage message = new ACLMessage(ACLMessage.INFORM);
-		message.setContent(m_portal.toJSONArray());
+		message.setContent(m_portal.toJson());
 		
 		// on envoit � tous les drones
 		for(int i = 0 ; i < Constants.m_numberDrones ; i ++)

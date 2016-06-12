@@ -53,7 +53,7 @@ public class Constants
 	// la hauteur du terrain (en pixels)
 	static int m_pHeight = m_height * m_dotSize;
 	
-	static enum State{ALONE, FLEET, FUSION};
+	static enum State{ALONE, FLEET, FUSION, TRAVELING_TO_PORTAL, WAITING_FOR_PORTAL_AUTORIZATION, ENTERING_PORTAL, ARRIVED, DEAD};
 	
 	static public void setNumberDrones(int numberDrones)
 	{
