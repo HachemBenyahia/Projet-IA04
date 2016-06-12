@@ -589,7 +589,6 @@ class ReceiveEnvironment extends Behaviour
 							} else
 							{
 								int nbDronesAccepted = Integer.parseInt(args.get("nbDronesAccepted").toString());
-								System.out.println("PORTAL X : " + position.getX() + " Y : " + position.getY());
 								m_drone.m_knownPortalsPositions.put(portalName, position);
 								m_drone.m_knowPortalsNbDronesAccepted.put(portalName, nbDronesAccepted);
 							}
@@ -872,6 +871,7 @@ class CheckPortalPossibility extends TickerBehaviour
 		while (ite.hasNext())
 		{
 			Entry<String, Integer> portalCapacity = ite.next();
+			System.out.println("drone" + m_drone.m_id + " ; " + portalCapacity.getKey());
 			
 			if (m_drone.m_fleet.size() >= portalCapacity.getValue())
 			{
@@ -879,11 +879,15 @@ class CheckPortalPossibility extends TickerBehaviour
 				
 				ACLMessage answer = m_drone.receive(
 						MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REFUSE),MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL)));
-				if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL)
+				if (answer != null && answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL)
 				{
 					// Envoyer l'ordre aux drones de la flotte
 					Position portalPosition = m_drone.m_knownPortalsPositions.get(portalCapacity.getKey());
 					m_drone.sendDronesToPortal(portalCapacity.getKey(), portalPosition, portalCapacity.getValue(), answer.getConversationId());
+				}
+				else
+				{
+					block();
 				}
 				
 			}
