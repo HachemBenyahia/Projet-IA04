@@ -1,5 +1,7 @@
 package main;
 
+import org.json.simple.JSONObject;
+
 // classe simple qui repr�sente une position (x, y)
 // elle deviendra notament utile pour le filtrage des distances
 // et autres calculs �ventuels du genre
@@ -191,5 +193,14 @@ public class Position
 			return true;
 		
 		return false;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public JSONObject toJson()
+	{
+		JSONObject position = new JSONObject();
+		position.put("x", this.getX());
+		position.put("y", this.getY());
+		return position;
 	}
 }
