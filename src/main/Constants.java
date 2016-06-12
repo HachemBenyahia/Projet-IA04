@@ -55,6 +55,12 @@ public class Constants
 	
 	static enum State{ALONE, FLEET, FUSION};
 	
+	// Le temps avant la remise à 0 du mot de passe pour un portail
+	static long m_passwordResetDelay = 30000;
+	
+	static boolean m_landingGranted = true;
+	static boolean m_landingRefused = false;
+	
 	static public void setNumberDrones(int numberDrones)
 	{
 		m_numberDrones = numberDrones;
