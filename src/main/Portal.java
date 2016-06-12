@@ -181,12 +181,18 @@ class receiveDrones extends CyclicBehaviour
 			String password = message.getContent();
 			
 			if (password == m_portal.m_password)
-			{
+			{	// on ajoute à la liste des drones ayant donné le bon pwd pour vérifier s'ils sont tous arrivés
 				m_portal.m_inProcedureDrones.add(message.getSender());
 				if (m_portal.m_inProcedureDrones.size() == m_portal.m_nbDronesAccepted)
 				{
 					m_portal.replyToDrones(Constants.m_landingGranted);
 				}
+			}
+			else
+			{	// pwd incorrect
+				ACLMessage reply = message.createReply();
+				reply.setPerformative(ACLMessage.REFUSE);
+				this.getAgent().send(reply);
 			}
 		}
 		else

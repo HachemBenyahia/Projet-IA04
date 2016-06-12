@@ -1,5 +1,6 @@
 package main;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -14,7 +15,6 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -175,6 +175,31 @@ public class Drone extends Agent
 	boolean isActive()
 	{
 		return !(m_state.equals(Constants.State.DEAD) || m_state.equals(Constants.State.ARRIVED));
+	}
+	
+	// Envoie des Drones de la flotte à un portail
+	void sendDronesToPortal(String portalName, Position portalPosition, int portalCapacity, String password)
+	{
+		ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+		message.setConversationId("portals");
+		
+		String JSONContent =
+				"{\"name\" : " + portalName + ", " +
+				"\"password\" : " + password + ", " + 
+				"\"position\" : {\"x\" : " + portalPosition.m_x + ", \"y\" : " + portalPosition.m_y + "} , " + 
+				"\"nbDronesAccepted\" : " + portalCapacity + "}";
+		
+		message.setContent(JSONContent);
+		
+		Object[] arrayFleet = this.m_fleet.keySet().toArray();
+		
+		for (int i=0; i<portalCapacity; i++)
+		{
+			AID droneAID = new AID("Drone" + arrayFleet[arrayFleet.length - i], AID.ISLOCALNAME);
+			message.addReceiver(droneAID);
+		}
+		
+		this.send(message);
 	}
 	
 	// mÃ©thode qui permet d'encoder les paramÃ¨tres du drones au format JSON
@@ -828,6 +853,9 @@ class CheckPortalPossibility extends TickerBehaviour
 	
 	public void onTick()
 	{
+		// Seulement à faire si Master
+		if (!m_drone.isMaster()) { return; }
+		
 		Iterator<Entry<String, Integer>> ite = m_drone.m_knowPortalsNbDronesAccepted.entrySet().iterator();
 		
 		while (ite.hasNext())
@@ -837,6 +865,15 @@ class CheckPortalPossibility extends TickerBehaviour
 			if (m_drone.m_fleet.size() >= portalCapacity.getValue())
 			{
 				this.m_drone.initiateLandingRequest(portalCapacity.getKey());
+				
+				ACLMessage answer = m_drone.receive(
+						MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REFUSE),MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL)));
+				if (answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL)
+				{
+					// Envoyer l'ordre aux drones de la flotte
+					Position portalPosition = m_drone.m_knownPortalsPositions.get(portalCapacity.getKey());
+					m_drone.sendDronesToPortal(portalCapacity.getKey(), portalPosition, portalCapacity.getValue(), answer.getConversationId());
+				}
 				
 			}
 		}
