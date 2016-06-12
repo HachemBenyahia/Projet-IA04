@@ -5,42 +5,69 @@ import java.util.Map;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.wrapper.StaleProxyException;
 
-// l'agent display, qui est en charge de l'affichage et de son actualisation (GUI = Graphical User Interface = interface graphique)
+// L'agent display, qui est en charge de l'affichage et de l'actualisation de la GUI
+/**
+ * <b>Dipslay est l'agent qui s'occupe de g√©rer la logique fonctionnelle du syst√®me.</b>
+ * <p>L'agent Display ne contient que l'attribut m_drones, la liste des positions de drones. </p>
+ * <p>L'agent Display poss√®de deux comportements :
+ * RetrievePositions (le behaviour charg√© de r√©cup√©rer les positions des drones) et
+ * DeathDetector (le behaviour charg√© de r√©cup√©rer les drones morts).</p>
+ * 
+ * @see Drone
+ * @see GUI
+ * @see RetrievePositions
+ * @see	DeathDetector
+ */
 public class Display extends Agent
 {
 	private static final long serialVersionUID = 1L;
-	
-	// la map qui contient le nom du drone et sa position (la position est un couple (x,y))
-	// par exemple ["Drone1"] = (232, 105)
+	// La mappe qui contient le nom du drone et sa position
+	/**
+	 * La mappe contenant les positions des drones, l'agent display s'occupe de fournir la liste actualis√©e de positions.
+	 * 
+	 * @see Display#getDrones
+	*/
 	Map<String, Position> m_drones = new HashMap<String, Position>();
 	
-	// la mÈthode d'initialisation de la classe Display
+	// La m√©thode d'initialisation de la classe Display
+	/**
+	 * C'est le constructeur de la classe, mais cette m√©thode s'occupe √©galement de 
+	 * demander la cr√©ation de la GUI, des drones et d'affecter une position al√©atoire √† chaque drone.  
+	 * 
+	 * Dans cette m√©thode, on ajoute √©galement les comportements de l'agent.
+	 * 
+	 * @see Constants.numberDrones 
+ 	 * @see Drone
+	 * @see GUI
+	 * @see RetrievePositions
+	 * @see	DeathDetector
+	*/
 	protected void setup()
 	{	
-		// on crÈe les drones en leur affectant une position et un nom
-		for(int i = 0 ; i < Constants.m_numberDrones ; i++)
+		// on cr√©e les drones en leur affectant une position et un nom
+		for( int i = 0 ; i < Constants.m_numberDrones ; i++ )
 		{
-			// le nom est simplement la concatÈnation de "Drone" et de l'entier i
+			// Le nom est simplement la concat√©nation de "Drone" et de l'entier i
 			String name = "Drone" + Integer.toString(i);
 			
-			// on calcule une position libre sur le terrain
+			// On calcule deux positions libres sur le terrain
 			Position position = getFreePosition();
-
 			Position goal = getFreePosition();	
 			
-			// dans jade, au lieu de passer par les arguments par le constructeur, il
-			// faut les passer dans un tableau d'objets ; on passe l'identifiant i et
-			// la position
+			// Dans jade, au lieu de passer directement les arguments au constructeur,
+			// il faut les passer au travers d'un tableau d'objets,
+			// on passe l'identifiant et les positions
 			Object[] arguments = {i, position, goal};
 
 			try
 			{
-				// crÈation des drones un ‡ un
+				// Cr√©ation des drones
 				this.getContainerController().createNewAgent(name, "main.Drone", arguments).start();
 			}
 			catch (StaleProxyException exception) 
@@ -49,19 +76,19 @@ public class Display extends Agent
 				System.exit(-1);
 			}
 			
-			// on ajoute le drone crÈÈ dans la map des drones
+			// on ajoute le drone cr√©√© √† la map des drones
 			m_drones.put(name, position);
 		}
 	
-		// crÈation de l'interface graphique ; on lui passe la map des drones pour qu'elle initialise le terrain
-		// et une rÈfÈrence sur Display (je sais, c'est de la triche, mais c'est le seul moyen de faire fonctionner
-		// le truc)
+		// Cr√©ation de l'interface graphique, on lui passe la mappe des drones pour qu'il initialise le terrain
+		// et une r√©f√©rence sur Display
+		// (je sais, c'est de la triche, mais c'est le seul moyen de faire fonctionner le truc)
 		try
 		{
-			// paramËtres ‡ passer ‡ l'agent GUI
+			// param√®tres √† passer √† l'agent GUI
 			Object[] arguments = {m_drones, this};
 			
-			// crÈation de l'agent GUI
+			// cr√©ation de l'agent GUI
 			this.getContainerController().createNewAgent("GUI", "main.GUI", arguments).start();
 		}
 		catch (StaleProxyException exception) 
@@ -70,100 +97,158 @@ public class Display extends Agent
 			System.exit(-1);
 		}
 		
-		// le behaviour chargÈ de rÈcupÈrer les positions des drones
+		// Le behaviour charg√© de r√©cup√©rer les positions des drones
 		addBehaviour(new RetrievePositions(this, Constants.m_retrievePositionsPeriod));
+		
+		// Le behaviour charg√© de r√©cup√©rer les drones morts
+		addBehaviour(new DeathDetector(this));
 	}
 	
-	// une mÈthode pour mettre ‡ jour la position d'un drone
+	// une m√©thode pour mettre √† jour la position d'un drone
+	/**
+	 * Permet d'actualiser la position d'un drone donn√© en entr√©e. 
+	 * @param drone
+	 * 	L'ID du drone dont la position on veut mettre √† jour.
+	 * @param position
+	 * 	La nouvelle position du drone.
+	 
+	 * @see Position
+	*/
 	void updatePosition(String drone, Position position)
 	{
 		m_drones.get(drone).setPosition(position);
 	}
 	
-	// une mÈthode pour avoir la map des drones (nom, position)
+	// Une m√©thode pour r√©cup√©rer la map des drones (nom, position)
+	/**
+	 * Permet r√©cup√©rer la liste actualis√©e des positions des drones.
+	 * 
+	 * @return la liste des positions actuelles des drones.
+	*/
 	Map<String, Position> getDrones()
 	{
 		return m_drones;
 	}
 	
-	// une mÈthode qui renvoie une position libre ; notons que la mÈthode renvoie une position multiple
-	// de Constants.dotSize, car on veut que le terrain soit divisÈ en une grille de Constants.width x Constants.height
-	// cellules dont chaque cellule fait Constants.dotSize pixels de hauteur et largeur
+	// Une m√©thode qui renvoie une position libre du terrain
+	/**
+	 * Permet d'obtenir une position libre dans le terrain.
+	 * 
+	 * @return Une position libre dans le terrain.
+	 * 
+	 * @see Position#random
+	*/
 	Position getFreePosition()
 	{
 		Position position = null;
 		
+		//Jusqu'√† obtenir une position qui ne soit d√©j√† occup√©e par un autre drone
 		do
-			position = Position.random();
+			{ position = Position.random(); }
 		while(m_drones.containsValue(position));
 		
 		return position;
 	}
-}
+} //Fin de la classe Display
 
-// behaviour qui pÈriodiquement update sa map de positions en questionnant les drones
+// behaviour qui pÔøΩriodiquement update sa map de positions en questionnant les drones
+/**
+ * <b>RetrievePositions est le comportement de l'agent Display qui s'occupe de mettre √† jour la liste avec les 
+ * positions actuelles de drones, il s'agit d'un TickerBehaviour.</b>
+ * <p>Pour effectuer sa t√¢che, la classe ne poss√®de que deux champs : </p>
+ * <ul>
+ * 	<li>Une r√©f√©rence vers l'agent Display.</li>
+ * 	<li>Le nombre de messages attendus.</li>
+ * </ul>
+ * 
+ * @see Display
+ * @see Constants#m_retrievePositionsPeriod
+ */
 class RetrievePositions extends TickerBehaviour 
 {	
 	private static final long serialVersionUID = 1L;
 	
+	/**
+	 * Une r√©f√©rence vers l'agent Display
+	 * @see Display
+	*/
 	Display m_display = (Display) this.myAgent;
 	
-	// nombre de messages envoyÈs
+	// nombre de messages envoy√©s
+	/**
+	 * C'est le nombre de messages envoy√©s √† chaque it√©ration, c'est aussi le nombre de r√©ponses attendues.
+	 * @see RespondToDisplay
+	*/
 	int m_sent;
-
+	
+	/**
+	 * C'est le constructeur de la classe, il recoit en argument l'agent auquel il appartient et la p√©riode
+	 * entre chaque ex√©cution.
+	 * 
+	 * @param agent
+	 * 		L'agent auquel le comportement appartient.
+	 * @param period
+	 * 		la p√©riode entre chaque ex√©cution du comportement.
+	 * 
+	 * @see Constants#m_retrievePositionsPeriod
+	 * @see Display
+	*/
 	public RetrievePositions(Agent agent, long period) 
 	{
+		// √Ä l'initialisation du behaviour, on envoie un message √† tous les drones
 		super(agent, period);
-		
-		// ‡ l'initialisation du behaviour, on envoie un message ‡ tous les drones
 		sendToAll();
 	}
 
-	// cette mÈthode se lance pÈriodiquement
+	// cette m√©thode se lance p√©riodiquement
+	/**
+	 * C'est la m√©thode qui s'effectue p√©riodiquement pour r√©cup√©rer les messages des drones,
+	 * si tous les drones ont emis une r√©ponse, on r√©lance une requ√™te a tous.
+	 * 
+	 * @see Constants#m_retrievePositionsPeriod
+	*/
 	public void onTick()
 	{	
-		ACLMessage message = m_display.receive(MessageTemplate.MatchPerformative(ACLMessage.INFORM));
+		ACLMessage message = m_display.receive( MessageTemplate.MatchPerformative(ACLMessage.INFORM) );
 		
-		// si on a reÁu un message de type INFORM (donc qui provient d'un drone puisque les messages INFORM
-		// qui arrivent ‡ Display viennent forcÈment d'un drone)
-		if(message != null)
+		// si l'on a recu un message de type INFORM (donc qui provient d'un drone puisque les messages INFORM
+		// qui arrivent √† Display viennent forc√©ment d'un drone)
+		if( message != null )
 		{
-			// on dÈcrÈmente le nombre de messages attendus
-			m_sent --;
-			
-			// on rÈcupËre les paramËtres du message JSON
-			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
-			
-			// le paramËtre id
-			int id = (int) parameters.get("id");
-			
-			// le paramËtre position
-			Position position = (Position) parameters.get("position");
-			
+			// on d√©cr√©mente le nombre de messages attendus
+			m_sent--;
+			// on rÔøΩcupÔøΩre les paramÔøΩtres du message JSON
+			//Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
+			// le paramÔøΩtre id
+			//int id = (int) parameters.get("id");
+			// le paramÔøΩtre position
+			//Position position = (Position) parameters.get("position");
 			// affichage pour voir ce qui se passe
-			// j'ai utilisÈ mÈthode getDistance() pour montrer ce qu'elle donne
-			// (mÈthode qui sera utile pour le filtrage des messages des drones entre eux)
-			System.out.println(message.getSender().getLocalName() + " a envoyÈ " + position.toString());
+			// j'ai utilisÔøΩ mÔøΩthode getDistance() pour montrer ce qu'elle donne
+			// (mÔøΩthode qui sera utile pour le filtrage des messages des drones entre eux)
+			//System.out.println(message.getSender().getLocalName() + " a envoyÔøΩ " + position.toString());
 			
-			System.out.println("Distance du drone " + id + " ‡ l'origine : " 
-			+ m_display.m_drones.get("Drone" + id).getDistance(new Position(0, 0)));
-			
-			// si on reÁu toutes les rÈponses, on renvoie une load de message
-			// (le paramËtre m_sent est actualisÈ dans sendToAll())
+			// si l'on recu toutes les r√©ponses, on renvoie une load de message
+			// (le param√®tre m_sent est actualis√© dans sendToAll())
 			if(m_sent == 0)
-				sendToAll();
+				{ sendToAll(); }
 		}
 		else
-			block();
+			{ block(); }
 	}
 	
-	// mÈthode qui envoie une requÍte de demande de positions ‡ tous les drones
+	// mÔøΩthode qui envoie une requÔøΩte de demande de positions ÔøΩ tous les drones
+	/**
+	 * Permet d'envoyer une requ√™te de position √† tous les drones.
+	 * 
+	 * @see RespondToDisplay
+	*/
 	void sendToAll()
 	{
 		ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
 		
-		for(int i = 0 ; i < m_display.m_drones.size() ; i ++)
-			message.addReceiver(new AID("Drone" + i, AID.ISLOCALNAME));
+		for( int i = 0 ; i < m_display.m_drones.size() ; i ++ )
+			{ message.addReceiver( new AID("Drone" + i, AID.ISLOCALNAME) ); }
 		
 		m_display.send(message);
 		
@@ -171,3 +256,56 @@ class RetrievePositions extends TickerBehaviour
 		m_sent = m_display.m_drones.size();
 	}
 }
+
+/**
+ * <b>DeathDetector est le comportement de l'agent Display qui s'occupe d'identifier s'il y a des drones morts,
+ * il s'agit d'un CyclicBehaviour.</b>
+ * <p>Pour effectuer sa t√¢che, l'agent ne poss√®de qu'un champ : une r√©f√©rence vers l'agent Display.</p>
+ * 
+ * @see Display
+ * @see ReceiveEnvironment#action
+ */
+class DeathDetector extends CyclicBehaviour
+{
+	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * Une r√©f√©rence vers l'agent Display
+	 * @see Display
+	*/
+	Display m_display = (Display) this.myAgent;
+	
+	/**
+	 * C'est le constructeur de la classe, il recoit en argument l'agent auquel il appartient.
+	 * 
+	 * @param agent
+	 * 		L'agent auquel le comportement appartient.
+	 * 
+	 * @see Display
+	*/
+	public DeathDetector(Agent agent) 
+	{
+		super(agent);
+	}
+	
+	/**
+	 * C'est la m√©thode permet de r√©cup√©rer les messages indiquant la mort d'un drone pour 
+	 * le supprimer de la liste des drones.
+	 * 
+	 * @see ReceiveEnvironment#action
+	*/
+	public void action()
+	{
+		ACLMessage message = m_display.receive(MessageTemplate.MatchPerformative(ACLMessage.FAILURE));
+		if ( message != null )
+		{
+			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
+			int id = (int) parameters.get("id");
+			String name = "Drone"+Integer.toString(id);
+			m_display.m_drones.remove(name);
+		}
+		else
+			{ block(); }
+	}
+}
+
