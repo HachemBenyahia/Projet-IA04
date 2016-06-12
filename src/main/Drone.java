@@ -12,6 +12,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -139,6 +140,7 @@ public class Drone extends Agent
 		addBehaviour(new PortalAccept(this));
 		addBehaviour(new PortalRefuse(this));
 		addBehaviour(new Movement(this, Constants.m_movementPeriod));
+		addBehaviour(new CheckPortalPossibility(this, Constants.m_emitEnvironmentPeriod));
 	}
 
 	// savoir si l'on est le master
@@ -812,4 +814,48 @@ class Movement extends TickerBehaviour
 			break;
 		}
 	}
+}
+
+// Behaviour du maitre de flotte vérifiant si des drones peuvent être envoyés à un portail découvert.
+class CheckPortalPossibility extends TickerBehaviour
+{
+	private static final long serialVersionUID = 1L;
+
+	Drone m_drone;
+	
+	public CheckPortalPossibility(Drone drone, long period)
+	{
+		super(drone, period);
+		m_drone = drone;
+	}
+	
+	public void onTick()
+	{
+		// pour chaque portail enregistré, vérifier si il est possible d'envoyer des drones.
+			// début d'une requete atterissage
+			// si oui, créer un SendToPortal
+	}
+}
+
+
+class InitiateLandingRequest extends OneShotBehaviour
+{
+	private static final long serialVersionUID = 1L;
+	
+	Drone m_drone;
+	String m_portalName;
+	
+	public InitiateLandingRequest(Drone drone, String portalName)
+	{
+		super();
+		m_drone = drone;
+		m_portalName = portalName;
+	}
+
+	public void action() {
+		ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+		message.addReceiver(new AID(m_portalName, AID.ISLOCALNAME));
+		message.setContent(m_drone.toJSONArray());
+	}
+	
 }

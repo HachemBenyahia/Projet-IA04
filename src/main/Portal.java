@@ -1,11 +1,16 @@
 package main;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
@@ -16,6 +21,10 @@ public class Portal extends Agent {
 	int m_nbDronesAccepted;
 	Position m_position;
 	boolean m_isOpen;
+	boolean m_isFree;
+	String m_password;
+	ArrayList<AID> m_inProcedureDrones;
+	
 	
 	protected void setup()
 	{
@@ -27,6 +36,21 @@ public class Portal extends Agent {
 		m_isOpen = true;   // Ã  l'initialisation, tous les portails sont ouverts
 		
 		addBehaviour(new PlacesBroadcast(this, Constants.m_emitEnvironmentPeriod));
+	}
+	
+	void replyToDrones(boolean permission)
+	{
+		ACLMessage message = new ACLMessage((permission ? ACLMessage.AGREE : ACLMessage.REFUSE));
+		
+		Iterator<AID> ite = this.m_inProcedureDrones.iterator();
+		
+		while (ite.hasNext())
+		{
+			AID element = ite.next();
+			message.addReceiver(element);
+		}
+		
+		this.send(message);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -72,6 +96,105 @@ class PlacesBroadcast extends TickerBehaviour
 		
 		m_portal.send(message);
 	}
+}
+
+class receiveLandingRequest extends CyclicBehaviour
+{
+	private static final long serialVersionUID = 1L;
+	
+	Portal m_portal;
+	
+	public receiveLandingRequest(Portal portal)
+	{
+		super();
+		m_portal = portal;
+	}
+
+	public void action() {
+		ACLMessage message = m_portal.receive(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE));
+		
+		if (message != null)
+		{
+			ACLMessage reply = message.createReply();
+			
+			if (m_portal.m_isFree) // La place est dispo, request OK
+			{
+				m_portal.m_isFree = false;
+				m_portal.m_password = message.getConversationId();
+				reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+				this.getAgent().send(reply);
+				// déclenche le timer pour le reset du password
+				this.getAgent().addBehaviour(new ResetPassword(m_portal, Constants.m_passwordResetDelay));
+				
+			}
+			else // Un autre maitre est déjà en train d'envoyer des drones, on refuse
+			{
+				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+				this.getAgent().send(reply);
+			}
+		}
+		else
+		{
+			block();
+		}
+	}
+	
+}
+
+
+// Vérifie que le temps imparti pour rentrer dans le portail après acceptation de la procédure n'est pas dépassé.
+class ResetPassword extends WakerBehaviour
+{
+	private static final long serialVersionUID = 1L;
+	
+	Portal m_portal;
+
+	public ResetPassword(Portal portal, long timeout) {
+		super(portal, timeout);
+		m_portal = portal;
+	}
+	
+	public void handleElapsedTimeout()
+	{
+		System.out.println("Password reset pour PORTAL " + m_portal.m_id + "(timeout)");
+		m_portal.m_password = "";
+	}
+}
+
+class receiveDrones extends CyclicBehaviour
+{
+	private static final long serialVersionUID = 1L;
+	
+	Portal m_portal;
+	
+	public receiveDrones(Portal portal)
+	{
+		super();
+		m_portal = portal;
+	}
+
+	public void action() {
+		ACLMessage message = m_portal.receive(MessageTemplate.MatchPerformative(ACLMessage.QUERY_IF));
+		
+		if (message != null)
+		{
+			String password = message.getContent();
+			
+			if (password == m_portal.m_password)
+			{
+				m_portal.m_inProcedureDrones.add(message.getSender());
+				if (m_portal.m_inProcedureDrones.size() == m_portal.m_nbDronesAccepted)
+				{
+					m_portal.replyToDrones(Constants.m_landingGranted);
+				}
+			}
+		}
+		else
+		{
+			block();
+		}
+	}
+	
 }
 
 
