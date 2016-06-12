@@ -530,18 +530,16 @@ class ReceiveEnvironment extends Behaviour
 							m_drone.m_fleet.replace(new Integer(id), position);
 							
 							// propage les infos des portails connus Ã  tous les drones de la flotte
+							ACLMessage portalsPositionsMessage = new ACLMessage(ACLMessage.INFORM);
+							portalsPositionsMessage.setConversationId("portals");
+							portalsPositionsMessage.setContent(m_drone.knownPortalsToJson());
 							for(Map.Entry<Integer, Position> entry : m_drone.m_fleet.entrySet())
 							{
 								int droneId = entry.getKey().intValue();
 								if (droneId != m_drone.m_id)
-								{
-									ACLMessage portalsPositionsMessage = new ACLMessage(ACLMessage.INFORM);
-									portalsPositionsMessage.setConversationId("portals");
 									portalsPositionsMessage.addReceiver(new AID("Drone"+droneId, AID.ISLOCALNAME));
-									portalsPositionsMessage.setContent(m_drone.knownPortalsToJson());
-									m_drone.send(portalsPositionsMessage);
-								}
 							}
+							m_drone.send(portalsPositionsMessage);
 						break;
 						
 						default :
@@ -687,21 +685,32 @@ class ReceiveMasterOrder extends Behaviour
 			{
 				JSONParser jsonParser = new JSONParser();
 				JSONObject args = (JSONObject) jsonParser.parse(message.getContent());
+				String action = args.get("action").toString();
 				String portalName = args.get("name").toString();
-				String portalPassword = args.get("password").toString();
-				if (!m_drone.m_knownPortalsPositions.containsKey("portalName"))
+				if (action.equals("goTo"))
 				{
-					JSONObject positionJson = (JSONObject) args.get("position");
-					int x = Integer.parseInt((positionJson.get("x")).toString());
-					int y = Integer.parseInt((positionJson.get("y")).toString());
-					Position portalPosition = new Position(x,y);
-					int nbDronesAccepted = Integer.parseInt(args.get("nbDronesAccepted").toString());
-					m_drone.m_knownPortalsPositions.put(portalName, portalPosition);
-					m_drone.m_knowPortalsNbDronesAccepted.put(portalName, nbDronesAccepted);
+					String portalPassword = args.get("password").toString();
+					if (!m_drone.m_knownPortalsPositions.containsKey("portalName"))
+					{
+						JSONObject positionJson = (JSONObject) args.get("position");
+						int x = Integer.parseInt((positionJson.get("x")).toString());
+						int y = Integer.parseInt((positionJson.get("y")).toString());
+						Position portalPosition = new Position(x,y);
+						int nbDronesAccepted = Integer.parseInt(args.get("nbDronesAccepted").toString());
+						m_drone.m_knownPortalsPositions.put(portalName, portalPosition);
+						m_drone.m_knowPortalsNbDronesAccepted.put(portalName, nbDronesAccepted);
+					}
+					m_drone.m_state = Constants.State.TRAVELING_TO_PORTAL;
+					m_drone.m_portalPassword = portalPassword;
+					m_drone.m_goal = m_drone.m_knownPortalsPositions.get(portalName);
+				} else
+				{
+					if (action.equals("delete"))
+					{
+						m_drone.m_knownPortalsPositions.remove(portalName);
+						m_drone.m_knowPortalsNbDronesAccepted.remove(portalName);
+					}
 				}
-				m_drone.m_state = Constants.State.TRAVELING_TO_PORTAL;
-				m_drone.m_portalPassword = portalPassword;
-				m_drone.m_goal = m_drone.m_knownPortalsPositions.get(portalName);
 			} catch(Exception e)
 			{
 				e.printStackTrace();
@@ -768,6 +777,8 @@ class PortalRefuse extends Behaviour
 		{
 			m_drone.generateGoal();;
 			m_drone.m_state = Constants.State.ALONE;
+			m_drone.m_destinationPortalName = "";
+			m_drone.m_portalPassword = "";
 		} else 
 		{
 			block();
@@ -838,7 +849,7 @@ class Movement extends TickerBehaviour
 	}
 }
 
-// Behaviour du maitre de flotte vérifiant si des drones peuvent être envoyés à un portail découvert.
+// Behaviour du maitre de flotte vï¿½rifiant si des drones peuvent ï¿½tre envoyï¿½s ï¿½ un portail dï¿½couvert.
 class CheckPortalPossibility extends TickerBehaviour
 {
 	private static final long serialVersionUID = 1L;
@@ -877,5 +888,6 @@ class CheckPortalPossibility extends TickerBehaviour
 				
 			}
 		}
+
 	}
 }
