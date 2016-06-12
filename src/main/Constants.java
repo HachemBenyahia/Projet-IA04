@@ -22,7 +22,7 @@ public class Constants
 	static int m_height = 40;
 	
 	// le nombre de drones sur le terrain
-	static int m_numberDrones = 8;
+	static int m_numberDrones = 6;
 	
 	// la taille d'une cellule sur le terrain (en pixels)
 	static int m_dotSize = 10;
@@ -35,7 +35,7 @@ public class Constants
 	static int m_movementPeriod = 1000;
 	
 	// port�e maximale en pixels
-	static int m_maxRange = 80;
+	static int m_maxRange = 100;
 	
 	// les coefficients rgb de la couleur du drone
 	static int m_droneRed = 255;
