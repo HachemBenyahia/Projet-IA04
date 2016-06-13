@@ -13,6 +13,8 @@ import org.json.simple.parser.ParseException;
 // classe qui recense les constantes utilis�es par le programme
 public class Constants 
 {	
+	static boolean m_collisionActivated = true;
+	
 	// la p�riode de r�cup�ration des positions des drones (en ms)
 	static int m_retrievePositionsPeriod = 1000;
 	
@@ -33,7 +35,7 @@ public class Constants
 	
 	// p�riode de mouvement d'un drone, c'est-dire la p�riode entre
 	// deux d�placements (ou deux tentatives de d�placement en tout cas
-	static int m_movementPeriod = 1200;
+	static int m_movementPeriod = 900;
 	
 	// port�e maximale en pixels
 	static int m_maxRange = 100;
@@ -62,7 +64,7 @@ public class Constants
 	static enum Action{GO_TO, DELETE}  // Go_to => va vers ce portail , DELETE => supprime ce portail, il n'est plus ouvert
 	
 	// Le temps avant la remise � 0 du mot de passe pour un portail
-	static long m_passwordResetDelay = 40000;
+	static long m_passwordResetDelay = 25000;
 	
 	static boolean m_landingGranted = true;
 	static boolean m_landingRefused = false;

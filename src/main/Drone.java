@@ -480,7 +480,7 @@ class ReceiveEnvironment extends Behaviour
 							m_drone.m_lastReception = System.currentTimeMillis();
 					}
 					
-					if(m_drone.m_position.equals(position) && !m_drone.m_state.equals(Constants.State.ENTERING_PORTAL) && !m_drone.m_state.equals(Constants.State.ARRIVED))
+					if(Constants.m_collisionActivated && m_drone.m_position.equals(position) && !m_drone.m_state.equals(Constants.State.ENTERING_PORTAL) && !m_drone.m_state.equals(Constants.State.ARRIVED))
 					{
 						System.out.println("collision");
 						ACLMessage deathMessage = new ACLMessage(ACLMessage.FAILURE);
@@ -562,7 +562,6 @@ class ReceiveEnvironment extends Behaviour
 						{
 							if (m_drone.m_state == Constants.State.ENTERING_PORTAL && m_drone.m_destinationPortalName.equals(portalName))
 							{
-								System.out.println("dans premier if");
 								if (m_drone.m_position.equals(position))
 								{
 									m_drone.m_state = Constants.State.ARRIVED;
@@ -695,7 +694,7 @@ class ReceiveMasterOrder extends Behaviour
 						m_drone.m_portalsQueue.add(portalName);
 					}
 					m_drone.m_state = Constants.State.TRAVELING_TO_PORTAL;
-					System.out.println("drone "+m_drone.m_id+" is traveling");
+					System.out.println("drone "+m_drone.m_id+" is traveling ("+Integer.parseInt(args.get("nbDronesAccepted").toString())+")");
 					// send leaving fleet message
 					ACLMessage leavingFleetMessage = new ACLMessage(ACLMessage.FAILURE);
 					leavingFleetMessage.setContent(m_drone.toJSONArray());
@@ -827,7 +826,8 @@ class Movement extends TickerBehaviour
 			break;
 			
 			case ENTERING_PORTAL :
-				m_drone.m_position.moveTowards(m_drone.m_goal);
+				if (m_drone.m_goal != null)
+					m_drone.m_position.moveTowards(m_drone.m_goal);
 			break;
 			
 			case FLEET :
@@ -870,7 +870,7 @@ class CheckPortalPossibility extends TickerBehaviour
 	public void onTick()
 	{
 		// Seulement � faire si Master
-		if (!m_drone.isMaster()) { return; }
+		if (!m_drone.isMaster() || m_drone.m_state.equals(Constants.State.TRAVELING_TO_PORTAL) || m_drone.m_state.equals(Constants.State.ENTERING_PORTAL)) { return; }
 		if (m_drone.m_portalsQueue.isEmpty())
 		{
 			for(Entry<String, Position> entry : m_drone.m_knownPortalsPositions.entrySet())
@@ -882,7 +882,6 @@ class CheckPortalPossibility extends TickerBehaviour
 		int iterations = 0;
 		while (pickedPortalName != null && !pickedPortalName.isEmpty() && !m_drone.m_knowPortalsNbDronesAccepted.containsKey(pickedPortalName)) // on vérifie que les noms de la file sont d'actualité
 		{
-			System.out.println("dans ");
 			pickedPortalName = m_drone.m_portalsQueue.poll();
 		}
 		
@@ -984,8 +983,10 @@ class ListenAcceptPortalProposal extends Behaviour
 				AID droneAID = new AID("Drone" + arrayFleet[arrayFleet.length - i -1], AID.ISLOCALNAME);
 				message.addReceiver(droneAID);
 			}
+			System.out.println("go to request sent by drone "+m_drone.m_id);
 			if (m_drone.m_fleet.size() == portalCapacity) // the exact same number => the master has to go
 			{
+				System.out.println("the master is going");
 				m_drone.m_state = Constants.State.TRAVELING_TO_PORTAL;
 				System.out.println("drone "+m_drone.m_id+" is traveling");
 				m_drone.m_destinationPortalName = portalName;
@@ -1057,9 +1058,9 @@ class ListenDroneLeaving extends Behaviour
 		
 		if (message != null)
 		{	
-			String droneName = message.getSender().getLocalName();
 			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
 			int id = (int) parameters.get("id");
+			System.out.println("suppressin du drone "+id+" de la flotte du drone "+m_drone.m_id);
 			m_drone.m_fleet.remove(id);
 		} else
 		{

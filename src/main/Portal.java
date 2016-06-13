@@ -129,16 +129,16 @@ class receiveLandingRequest extends Behaviour
 				m_portal.m_password = Constants.randomString(10);
 				reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 				reply.setContent(m_portal.m_password);
-				this.getAgent().send(reply);
+				m_portal.send(reply);
 				// d�clenche le timer pour le reset du password
-				this.getAgent().addBehaviour(new ResetPassword(m_portal, Constants.m_passwordResetDelay));
+				m_portal.addBehaviour(new ResetPassword(m_portal, Constants.m_passwordResetDelay));
 				
 			}
 			else // Un autre maitre est d�j� en train d'envoyer des drones, on refuse
 			{
 				System.out.println("portail "+m_portal.m_id+" REFUSE prop de "+message.getSender().getLocalName());
 				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-				this.getAgent().send(reply);
+				m_portal.send(reply);
 			}
 		}
 		else
@@ -210,7 +210,7 @@ class receiveDrones extends Behaviour
 				System.out.println("Pwd incorrect" + m_portal.m_password + " " + password);
 				ACLMessage reply = message.createReply();
 				reply.setPerformative(ACLMessage.REFUSE);
-				this.getAgent().send(reply);
+				m_portal.send(reply);
 			}
 		}
 		else
