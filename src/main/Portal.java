@@ -121,11 +121,11 @@ class receiveLandingRequest extends Behaviour
 		if (message != null)
 		{
 			ACLMessage reply = message.createReply();
-			
+			System.out.println("portail "+m_portal.m_id+" recoi prop de "+message.getSender().getLocalName());
 			if (m_portal.m_isFree) // La place est dispo, request OK
 			{
+				System.out.println("portail "+m_portal.m_id+" ACCEPTE prop de "+message.getSender().getLocalName());
 				m_portal.m_isFree = false;
-				System.out.println("ok JE SUIS FREEEE");
 				m_portal.m_password = Constants.randomString(10);
 				reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 				reply.setContent(m_portal.m_password);
@@ -136,6 +136,7 @@ class receiveLandingRequest extends Behaviour
 			}
 			else // Un autre maitre est d�j� en train d'envoyer des drones, on refuse
 			{
+				System.out.println("portail "+m_portal.m_id+" REFUSE prop de "+message.getSender().getLocalName());
 				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
 				this.getAgent().send(reply);
 			}
@@ -209,6 +210,42 @@ class receiveDrones extends Behaviour
 				reply.setPerformative(ACLMessage.REFUSE);
 				this.getAgent().send(reply);
 			}
+		}
+		else
+		{
+			block();
+		}
+	}
+	public boolean done()
+	{
+		return !m_portal.m_isOpen;
+	}
+}
+
+class ListenDronesArrival extends Behaviour
+{
+	private static final long serialVersionUID = 1L;
+	
+	Portal m_portal;
+	
+	public ListenDronesArrival(Portal portal)
+	{
+		super();
+		m_portal = portal;
+	}
+
+	public void action() {
+		ACLMessage message = m_portal.receive(MessageTemplate.MatchPerformative(ACLMessage.CONFIRM));
+		
+		if (message != null)
+		{
+			int senderIndex = m_portal.m_inProcedureDrones.indexOf(message.getSender());
+			if (senderIndex >= 0) {
+				m_portal.m_inProcedureDrones.remove(senderIndex);
+				System.out.println("reception du drone "+message.getSender().getLocalName());
+			}
+			if (m_portal.m_inProcedureDrones.size() == 0)
+				m_portal.m_isOpen = false;
 		}
 		else
 		{
