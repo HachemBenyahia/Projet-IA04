@@ -174,6 +174,7 @@ class ResetPassword extends WakerBehaviour
 			m_portal.replyToDrones(Constants.m_landingRefused); // reject all former drones awaiting for an answer
 		}
 		m_portal.m_inProcedureDrones = new ArrayList<AID>(); // reset in_procedure_drones array
+		m_portal.m_isFree = true;
 	}
 }
 
@@ -206,6 +207,7 @@ class receiveDrones extends Behaviour
 			}
 			else
 			{	// pwd incorrect
+				System.out.println("Pwd incorrect" + m_portal.m_password + " " + password);
 				ACLMessage reply = message.createReply();
 				reply.setPerformative(ACLMessage.REFUSE);
 				this.getAgent().send(reply);

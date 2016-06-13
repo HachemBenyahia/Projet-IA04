@@ -1,12 +1,11 @@
 package main;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.TreeMap;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -139,7 +138,7 @@ public class Drone extends Agent
 		m_fleet.put(new Integer(m_id), m_position);
 		m_knownPortalsPositions = new HashMap<String, Position>();
 		m_knowPortalsNbDronesAccepted = new HashMap<String, Integer>();
-		m_portalsQueue = new ArrayBlockingQueue<String>(Constants.m_numberDrones);
+		m_portalsQueue = new PriorityQueue<String>(Constants.m_numberDrones);
 		m_destinationPortalName = "";
 		m_portalPassword = "";
 		m_lastPortalProposal = -Constants.m_timeToWaitBeforeNextPortalProposal;
@@ -956,7 +955,7 @@ class ListenAcceptPortalProposal extends Behaviour
 		if (answer != null)
 		{	
 			String portalName = answer.getSender().getLocalName();
-			String portalPassword = answer.getContent();
+			String portalPassword = answer.getContent().toString();
 			ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
 			message.setConversationId("portals");
 			
