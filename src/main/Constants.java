@@ -55,6 +55,9 @@ public class Constants
 	
 	static enum State{ALONE, FLEET, FUSION, TRAVELING_TO_PORTAL, WAITING_FOR_PORTAL_AUTORIZATION, ENTERING_PORTAL, ARRIVED, DEAD};
 	
+	// actions de drone maître à suiveur, pour les voyages aux portails
+	static enum Action{GO_TO, DELETE}  // Go_to => va vers ce portail , DELETE => supprime ce portail, il n'est plus ouvert
+	
 	// Le temps avant la remise � 0 du mot de passe pour un portail
 	static long m_passwordResetDelay = 30000;
 	

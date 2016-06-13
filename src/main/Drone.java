@@ -177,14 +177,15 @@ public class Drone extends Agent
 		return !(m_state.equals(Constants.State.DEAD) || m_state.equals(Constants.State.ARRIVED));
 	}
 	
-	// Envoie des Drones de la flotte à un portail
-	void sendDronesToPortal(String portalName, Position portalPosition, int portalCapacity, String password)
+	// Envoie des Drones de la flotte ï¿½ un portail
+	void sendDronesToPortal(Constants.Action action, String portalName, Position portalPosition, int portalCapacity, String password)
 	{
 		ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
 		message.setConversationId("portals");
 		
 		String JSONContent =
-				"{\"name\" : " + portalName + ", " +
+				"{\"action\" : " + action + ", " +
+				"\"name\" : " + portalName + ", " +
 				"\"password\" : " + password + ", " + 
 				"\"position\" : {\"x\" : " + portalPosition.m_x + ", \"y\" : " + portalPosition.m_y + "} , " + 
 				"\"nbDronesAccepted\" : " + portalCapacity + "}";
@@ -387,7 +388,7 @@ public class Drone extends Agent
 	
 	public void initiateLandingRequest(String portalName)
 	{
-		System.out.println("drone " + this.m_id + "initiating request to portal" + portalName);
+		//System.out.println("drone " + this.m_id + "initiating request to portal" + portalName);
 		ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
 		message.addReceiver(new AID(portalName, AID.ISLOCALNAME));
 		message.setContent(this.toJSONArray());
@@ -687,7 +688,7 @@ class ReceiveMasterOrder extends Behaviour
 				JSONObject args = (JSONObject) jsonParser.parse(message.getContent());
 				String action = args.get("action").toString();
 				String portalName = args.get("name").toString();
-				if (action.equals("goTo"))
+				if (action.equals(Constants.Action.GO_TO.toString()))
 				{
 					String portalPassword = args.get("password").toString();
 					if (!m_drone.m_knownPortalsPositions.containsKey("portalName"))
@@ -705,7 +706,7 @@ class ReceiveMasterOrder extends Behaviour
 					m_drone.m_goal = m_drone.m_knownPortalsPositions.get(portalName);
 				} else
 				{
-					if (action.equals("delete"))
+					if (action.equals(Constants.Action.DELETE.toString()))
 					{
 						m_drone.m_knownPortalsPositions.remove(portalName);
 						m_drone.m_knowPortalsNbDronesAccepted.remove(portalName);
@@ -744,6 +745,7 @@ class PortalAccept extends Behaviour
 		
 		if(message != null)
 		{
+			System.out.println("le portail m'accepte");
 			m_drone.m_goal = m_drone.m_knownPortalsPositions.get(m_drone.m_destinationPortalName);
 			m_drone.m_state = Constants.State.ENTERING_PORTAL;
 		} else 
@@ -775,6 +777,7 @@ class PortalRefuse extends Behaviour
 		
 		if(message != null)
 		{
+			System.out.println("le portail me refuse");
 			m_drone.generateGoal();;
 			m_drone.m_state = Constants.State.ALONE;
 			m_drone.m_destinationPortalName = "";
@@ -864,7 +867,7 @@ class CheckPortalPossibility extends TickerBehaviour
 	
 	public void onTick()
 	{
-		// Seulement à faire si Master
+		// Seulement ï¿½ faire si Master
 		if (!m_drone.isMaster()) { return; }
 		
 		Iterator<Entry<String, Integer>> ite = m_drone.m_knowPortalsNbDronesAccepted.entrySet().iterator();
@@ -872,7 +875,7 @@ class CheckPortalPossibility extends TickerBehaviour
 		while (ite.hasNext())
 		{
 			Entry<String, Integer> portalCapacity = ite.next();
-			System.out.println("drone" + m_drone.m_id + " ; " + portalCapacity.getKey() + "cap :" + portalCapacity.getValue());
+			//System.out.println("drone" + m_drone.m_id + " ; " + portalCapacity.getKey() + "cap :" + portalCapacity.getValue());
 			
 			if (m_drone.m_fleet.size() >= portalCapacity.getValue())
 			{
@@ -880,16 +883,17 @@ class CheckPortalPossibility extends TickerBehaviour
 				
 				ACLMessage answer = m_drone.receive(
 						MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REFUSE),MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL)));
+				Position portalPosition = m_drone.m_knownPortalsPositions.get(portalCapacity.getKey());
 				if (answer != null && answer.getPerformative() == ACLMessage.ACCEPT_PROPOSAL)
 				{
 					System.out.println("Reponse du portail");
 					// Envoyer l'ordre aux drones de la flotte
-					Position portalPosition = m_drone.m_knownPortalsPositions.get(portalCapacity.getKey());
-					m_drone.sendDronesToPortal(portalCapacity.getKey(), portalPosition, portalCapacity.getValue(), answer.getConversationId());
+					m_drone.sendDronesToPortal(Constants.Action.GO_TO, portalCapacity.getKey(), portalPosition, portalCapacity.getValue(), answer.getConversationId());
 				}
 				else if (answer != null && answer.getPerformative() == ACLMessage.REFUSE)
 				{
 					System.out.println("reponse negative du portail");
+					m_drone.sendDronesToPortal(Constants.Action.DELETE, portalCapacity.getKey(), portalPosition, portalCapacity.getValue(), answer.getConversationId());
 				}
 				else
 				{

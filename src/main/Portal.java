@@ -33,9 +33,14 @@ public class Portal extends Agent {
 		m_id = (int) arguments[0];
 		m_position = (Position) arguments[1];
 		m_nbDronesAccepted = (int) arguments[2];
+		m_inProcedureDrones = new ArrayList<AID>();
 		m_isOpen = true;   // Ã  l'initialisation, tous les portails sont ouverts
+		m_isFree = true;   // Ã  l'initialisation, tous les portails sont libres
+		m_password = "";
 		
 		addBehaviour(new PlacesBroadcast(this, Constants.m_emitEnvironmentPeriod));
+		addBehaviour(new receiveLandingRequest(this));
+		addBehaviour(new receiveDrones(this));
 	}
 	
 	void replyToDrones(boolean permission)
@@ -120,14 +125,15 @@ class receiveLandingRequest extends CyclicBehaviour
 			if (m_portal.m_isFree) // La place est dispo, request OK
 			{
 				m_portal.m_isFree = false;
+				System.out.println("ok JE SUIS FREEEE");
 				m_portal.m_password = message.getConversationId();
 				reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 				this.getAgent().send(reply);
-				// déclenche le timer pour le reset du password
+				// dï¿½clenche le timer pour le reset du password
 				this.getAgent().addBehaviour(new ResetPassword(m_portal, Constants.m_passwordResetDelay));
 				
 			}
-			else // Un autre maitre est déjà en train d'envoyer des drones, on refuse
+			else // Un autre maitre est dï¿½jï¿½ en train d'envoyer des drones, on refuse
 			{
 				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
 				this.getAgent().send(reply);
@@ -142,7 +148,7 @@ class receiveLandingRequest extends CyclicBehaviour
 }
 
 
-// Vérifie que le temps imparti pour rentrer dans le portail après acceptation de la procédure n'est pas dépassé.
+// Vï¿½rifie que le temps imparti pour rentrer dans le portail aprï¿½s acceptation de la procï¿½dure n'est pas dï¿½passï¿½.
 class ResetPassword extends WakerBehaviour
 {
 	private static final long serialVersionUID = 1L;
@@ -158,6 +164,11 @@ class ResetPassword extends WakerBehaviour
 	{
 		System.out.println("Password reset pour PORTAL " + m_portal.m_id + "(timeout)");
 		m_portal.m_password = "";
+		for (int i=0; i<m_portal.m_inProcedureDrones.size(); i++)
+		{
+			m_portal.replyToDrones(Constants.m_landingRefused); // reject all former drones awaiting for an answer
+		}
+		m_portal.m_inProcedureDrones = new ArrayList<AID>(); // reset in_procedure_drones array
 	}
 }
 
@@ -181,7 +192,7 @@ class receiveDrones extends CyclicBehaviour
 			String password = message.getContent();
 			
 			if (password == m_portal.m_password)
-			{	// on ajoute à la liste des drones ayant donné le bon pwd pour vérifier s'ils sont tous arrivés
+			{	// on ajoute ï¿½ la liste des drones ayant donnï¿½ le bon pwd pour vï¿½rifier s'ils sont tous arrivï¿½s
 				m_portal.m_inProcedureDrones.add(message.getSender());
 				if (m_portal.m_inProcedureDrones.size() == m_portal.m_nbDronesAccepted)
 				{
