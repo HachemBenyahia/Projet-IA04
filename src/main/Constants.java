@@ -13,7 +13,7 @@ import org.json.simple.parser.ParseException;
 // classe qui recense les constantes utilis�es par le programme
 public class Constants 
 {	
-	static boolean m_collisionActivated = true;
+	static boolean m_collisionActivated = false;
 	
 	// la p�riode de r�cup�ration des positions des drones (en ms)
 	static int m_retrievePositionsPeriod = 1000;

@@ -1060,7 +1060,6 @@ class ListenDroneLeaving extends Behaviour
 		{	
 			Map<String, Object> parameters = Constants.fromJSONArray(message.getContent());
 			int id = (int) parameters.get("id");
-			System.out.println("suppressin du drone "+id+" de la flotte du drone "+m_drone.m_id);
 			m_drone.m_fleet.remove(id);
 		} else
 		{
