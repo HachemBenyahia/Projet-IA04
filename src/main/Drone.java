@@ -463,7 +463,7 @@ class ReceiveEnvironment extends Behaviour
 				Position position = (Position) parameters.get("position");
 				
 				// le drone �metteur est proche
-				if(m_drone.m_position.reachable(position))
+				if(m_drone.m_position.reachable(position, Constants.m_maxRange))
 				{	
 					int id = (int) parameters.get("id");
 					
@@ -480,7 +480,7 @@ class ReceiveEnvironment extends Behaviour
 							m_drone.m_lastReception = System.currentTimeMillis();
 					}
 					
-					if(m_drone.m_position.equals(position))
+					if(m_drone.m_position.equals(position) && !m_drone.m_state.equals(Constants.State.ENTERING_PORTAL) && !m_drone.m_state.equals(Constants.State.ARRIVED))
 					{
 						System.out.println("collision");
 						ACLMessage deathMessage = new ACLMessage(ACLMessage.FAILURE);
@@ -547,7 +547,7 @@ class ReceiveEnvironment extends Behaviour
 					int y = Integer.parseInt((positionJson.get("y")).toString());
 					Position position = new Position(x,y);
 					
-					if(m_drone.m_position.reachable(position))
+					if(m_drone.m_position.reachable(position, Constants.m_portalMaxRange))
 					{
 						if (m_drone.m_state == Constants.State.TRAVELING_TO_PORTAL && m_drone.m_destinationPortalName.equals(portalName)) // try to enter into the portal
 						{
@@ -911,12 +911,10 @@ class CheckPortalPossibility extends TickerBehaviour
 				String JSONContent = args.toJSONString();
 				
 				message.setContent(JSONContent);
-				
-				Object[] arrayFleet = m_drone.m_fleet.keySet().toArray();
-				
-				for (int i=0; i<m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName); i++)
+								
+				for (Map.Entry<Integer, Position> entry : m_drone.m_fleet.entrySet())
 				{
-					AID droneAID = new AID("Drone" + arrayFleet[arrayFleet.length - i -1], AID.ISLOCALNAME);
+					AID droneAID = new AID("Drone" + entry.getKey(), AID.ISLOCALNAME);
 					message.addReceiver(droneAID);
 				}
 				

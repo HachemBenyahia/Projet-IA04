@@ -162,9 +162,9 @@ public class Position
 	}
 	
 	// renvoie vrai si le signal on est � la port�e de l'�metteur du signal
-	public boolean reachable(Position position)
+	public boolean reachable(Position position, int range)
 	{
-		if(getDistance(position) > Constants.m_maxRange)
+		if(getDistance(position) > range)
 			return false;
 		
 		return true;

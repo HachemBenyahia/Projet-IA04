@@ -23,7 +23,7 @@ public class Constants
 	static int m_height = 40;
 	
 	// le nombre de drones sur le terrain
-	static int m_numberDrones = 5;
+	static int m_numberDrones = 6;
 	
 	// la taille d'une cellule sur le terrain (en pixels)
 	static int m_dotSize = 10;
@@ -36,7 +36,9 @@ public class Constants
 	static int m_movementPeriod = 1200;
 	
 	// port�e maximale en pixels
-	static int m_maxRange = 200;
+	static int m_maxRange = 100;
+	
+	static int m_portalMaxRange = 100;
 	
 	// les coefficients rgb de la couleur du drone
 	static int m_droneRed = 255;
@@ -60,7 +62,7 @@ public class Constants
 	static enum Action{GO_TO, DELETE}  // Go_to => va vers ce portail , DELETE => supprime ce portail, il n'est plus ouvert
 	
 	// Le temps avant la remise � 0 du mot de passe pour un portail
-	static long m_passwordResetDelay = 20000;
+	static long m_passwordResetDelay = 40000;
 	
 	static boolean m_landingGranted = true;
 	static boolean m_landingRefused = false;
