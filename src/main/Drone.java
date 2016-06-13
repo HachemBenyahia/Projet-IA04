@@ -1,11 +1,12 @@
 package main;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.TreeMap;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -83,6 +84,9 @@ public class Drone extends Agent
 	
 	Map<String, Integer> m_knowPortalsNbDronesAccepted;
 	
+	// queue used to know prevent masters from picking the same portal over and over
+	Queue<String> m_portalsQueue;
+	
 	String m_destinationPortalName; // le nom du portail vers lequel il doit se diriger (choisi par son maitre)
 	
 	String m_portalPassword; // mot de passe à utiliser lors de la rencontre avec le portail choisi
@@ -135,6 +139,7 @@ public class Drone extends Agent
 		m_fleet.put(new Integer(m_id), m_position);
 		m_knownPortalsPositions = new HashMap<String, Position>();
 		m_knowPortalsNbDronesAccepted = new HashMap<String, Integer>();
+		m_portalsQueue = new ArrayBlockingQueue<String>(Constants.m_numberDrones);
 		m_destinationPortalName = "";
 		m_portalPassword = "";
 		m_lastPortalProposal = -Constants.m_timeToWaitBeforeNextPortalProposal;
@@ -864,59 +869,64 @@ class CheckPortalPossibility extends TickerBehaviour
 	{
 		// Seulement � faire si Master
 		if (!m_drone.isMaster()) { return; }
-		
-		Iterator<Entry<String, Integer>> ite = m_drone.m_knowPortalsNbDronesAccepted.entrySet().iterator();
-		
-		// on choisi le prochain portail à essayer
-		while (ite.hasNext())
+		if (m_drone.m_portalsQueue.isEmpty())
 		{
-			Entry<String, Integer> portalCapacity = ite.next();
-			String portalName = portalCapacity.getKey();
-			//System.out.println("drone" + m_drone.m_id + " ; " + portalCapacity.getKey() + "cap :" + portalCapacity.getValue());
-			
-			// si nous avons assez de drones dans notre flotte, alors on fait une demande
-			if (m_drone.m_fleet.size() >= portalCapacity.getValue())
+			for(Entry<String, Position> entry : m_drone.m_knownPortalsPositions.entrySet())
 			{
-				//System.out.println("drone " + this.m_id + "initiating request to portal" + portalName);
-				
-				// si nous essayons de demander au même portail depuis un lon moment, et qu'il nous a toujours pas répondu, on en déduit qu'il n'est plus actif, et on le supprime
-				if (System.currentTimeMillis() - m_drone.m_lastPortalProposal > Constants.m_timeToWaitBeforeNextPortalProposal && portalName.equals(m_drone.m_lastPortalProposalPortalName))
-				{
-					ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-					message.setConversationId("portals");
-										
-					JSONObject args = new JSONObject();
-					args.put("action", Constants.Action.DELETE.toString());
-					args.put("name", portalName);
-					String JSONContent = args.toJSONString();
-					
-					message.setContent(JSONContent);
-					
-					Object[] arrayFleet = m_drone.m_fleet.keySet().toArray();
-					
-					for (int i=0; i<portalCapacity.getValue(); i++)
-					{
-						AID droneAID = new AID("Drone" + arrayFleet[arrayFleet.length - i -1], AID.ISLOCALNAME);
-						message.addReceiver(droneAID);
-					}
-					
-					m_drone.send(message);
-					m_drone.m_destinationPortalName = "";
-					m_drone.m_knownPortalsPositions.remove(portalName);
-					m_drone.m_knowPortalsNbDronesAccepted.remove(portalName);
-					return;
-				}
-				// sinon on lui envoie une proposition
-				ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
-				message.addReceiver(new AID(portalName, AID.ISLOCALNAME));
-				message.setContent(m_drone.toJSONArray());
-				m_drone.send(message);
-				m_drone.m_lastPortalProposal = System.currentTimeMillis();
-				m_drone.m_lastPortalProposalPortalName = portalName;
-				return;			
+				m_drone.m_portalsQueue.add(entry.getKey());
 			}
 		}
+		String pickedPortalName = m_drone.m_portalsQueue.poll();
+		int iterations = 0;
+		while (!m_drone.m_knowPortalsNbDronesAccepted.containsKey(pickedPortalName)) // on vérifie que les noms de la file sont d'actualité
+			pickedPortalName = m_drone.m_portalsQueue.poll();
+		
+		while(iterations < m_drone.m_portalsQueue.size() && m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName) > m_drone.m_fleet.size())
+		{
+			pickedPortalName = m_drone.m_portalsQueue.poll();
+			m_drone.m_portalsQueue.add(pickedPortalName); // on réinjecte à la fin le nom choisi
+			iterations++;
+		}
+		if (iterations == m_drone.m_portalsQueue.size())
+			return; // no matching portals			
 
+		//System.out.println("drone " + this.m_id + "initiating request to portal" + portalName);
+		
+		// si nous essayons de demander au même portail depuis un lon moment, et qu'il nous a toujours pas répondu, on en déduit qu'il n'est plus actif, et on le supprime
+		if (System.currentTimeMillis() - m_drone.m_lastPortalProposal > Constants.m_timeToWaitBeforeNextPortalProposal && pickedPortalName.equals(m_drone.m_lastPortalProposalPortalName))
+		{
+			ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+			message.setConversationId("portals");
+								
+			JSONObject args = new JSONObject();
+			args.put("action", Constants.Action.DELETE.toString());
+			args.put("name", pickedPortalName);
+			String JSONContent = args.toJSONString();
+			
+			message.setContent(JSONContent);
+			
+			Object[] arrayFleet = m_drone.m_fleet.keySet().toArray();
+			
+			for (int i=0; i<m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName); i++)
+			{
+				AID droneAID = new AID("Drone" + arrayFleet[arrayFleet.length - i -1], AID.ISLOCALNAME);
+				message.addReceiver(droneAID);
+			}
+			
+			m_drone.send(message);
+			m_drone.m_destinationPortalName = "";
+			m_drone.m_knownPortalsPositions.remove(pickedPortalName);
+			m_drone.m_knowPortalsNbDronesAccepted.remove(pickedPortalName);
+			return;
+		}
+		// sinon on lui envoie une proposition
+		ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+		message.addReceiver(new AID(pickedPortalName, AID.ISLOCALNAME));
+		message.setContent(m_drone.toJSONArray());
+		m_drone.send(message);
+		m_drone.m_lastPortalProposal = System.currentTimeMillis();
+		m_drone.m_lastPortalProposalPortalName = pickedPortalName;
+		return;			
 	}
 }
 
