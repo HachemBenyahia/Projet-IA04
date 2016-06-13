@@ -584,6 +584,7 @@ class ReceiveEnvironment extends Behaviour
 								int nbDronesAccepted = Integer.parseInt(args.get("nbDronesAccepted").toString());
 								m_drone.m_knownPortalsPositions.put(portalName, position);
 								m_drone.m_knowPortalsNbDronesAccepted.put(portalName, nbDronesAccepted);
+								m_drone.m_portalsQueue.add(portalName);
 							}
 						}
 					}
@@ -638,6 +639,7 @@ class ReceivePortalsInfos extends Behaviour
 					int nbDronesAccepted = Integer.parseInt(portalJson.get("nbDronesAccepted").toString());
 					m_drone.m_knownPortalsPositions.put(portalName, portalPosition);
 					m_drone.m_knowPortalsNbDronesAccepted.put(portalName, nbDronesAccepted);
+					m_drone.m_portalsQueue.add(portalName);
 				}
 			} catch(Exception e)
 			{
@@ -691,6 +693,7 @@ class ReceiveMasterOrder extends Behaviour
 						int nbDronesAccepted = Integer.parseInt(args.get("nbDronesAccepted").toString());
 						m_drone.m_knownPortalsPositions.put(portalName, portalPosition);
 						m_drone.m_knowPortalsNbDronesAccepted.put(portalName, nbDronesAccepted);
+						m_drone.m_portalsQueue.add(portalName);
 					}
 					m_drone.m_state = Constants.State.TRAVELING_TO_PORTAL;
 					System.out.println("drone "+m_drone.m_id+" is traveling");
@@ -878,10 +881,13 @@ class CheckPortalPossibility extends TickerBehaviour
 		}
 		String pickedPortalName = m_drone.m_portalsQueue.poll();
 		int iterations = 0;
-		while (!m_drone.m_knowPortalsNbDronesAccepted.containsKey(pickedPortalName)) // on vérifie que les noms de la file sont d'actualité
+		while (pickedPortalName != null && !pickedPortalName.isEmpty() && !m_drone.m_knowPortalsNbDronesAccepted.containsKey(pickedPortalName)) // on vérifie que les noms de la file sont d'actualité
+		{
+			System.out.println("dans ");
 			pickedPortalName = m_drone.m_portalsQueue.poll();
+		}
 		
-		while(iterations < m_drone.m_portalsQueue.size() && m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName) > m_drone.m_fleet.size())
+		while(iterations < m_drone.m_knowPortalsNbDronesAccepted.size() && m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName) > m_drone.m_fleet.size())
 		{
 			pickedPortalName = m_drone.m_portalsQueue.poll();
 			m_drone.m_portalsQueue.add(pickedPortalName); // on réinjecte à la fin le nom choisi
@@ -956,6 +962,9 @@ class ListenAcceptPortalProposal extends Behaviour
 			
 			Position portalPosition = m_drone.m_knownPortalsPositions.get(portalName);
 			int portalCapacity = m_drone.m_knowPortalsNbDronesAccepted.get(portalName);
+			
+			if (m_drone.m_fleet.size() < portalCapacity)
+				return;
 			
 			JSONObject args = new JSONObject();
 			args.put("action", Constants.Action.GO_TO.toString());
