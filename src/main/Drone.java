@@ -886,7 +886,7 @@ class CheckPortalPossibility extends TickerBehaviour
 			pickedPortalName = m_drone.m_portalsQueue.poll();
 		}
 		
-		while(iterations < m_drone.m_knowPortalsNbDronesAccepted.size() && m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName) > m_drone.m_fleet.size())
+		while(!m_drone.m_portalsQueue.isEmpty() && iterations < m_drone.m_knowPortalsNbDronesAccepted.size() && m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName) > m_drone.m_fleet.size())
 		{
 			pickedPortalName = m_drone.m_portalsQueue.poll();
 			m_drone.m_portalsQueue.add(pickedPortalName); // on réinjecte à la fin le nom choisi
@@ -900,25 +900,29 @@ class CheckPortalPossibility extends TickerBehaviour
 		// si nous essayons de demander au même portail depuis un lon moment, et qu'il nous a toujours pas répondu, on en déduit qu'il n'est plus actif, et on le supprime
 		if (System.currentTimeMillis() - m_drone.m_lastPortalProposal > Constants.m_timeToWaitBeforeNextPortalProposal && pickedPortalName.equals(m_drone.m_lastPortalProposalPortalName))
 		{
-			ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-			message.setConversationId("portals");
-								
-			JSONObject args = new JSONObject();
-			args.put("action", Constants.Action.DELETE.toString());
-			args.put("name", pickedPortalName);
-			String JSONContent = args.toJSONString();
-			
-			message.setContent(JSONContent);
-			
-			Object[] arrayFleet = m_drone.m_fleet.keySet().toArray();
-			
-			for (int i=0; i<m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName); i++)
+			if (!m_drone.m_fleet.isEmpty())
 			{
-				AID droneAID = new AID("Drone" + arrayFleet[arrayFleet.length - i -1], AID.ISLOCALNAME);
-				message.addReceiver(droneAID);
+				ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+				message.setConversationId("portals");
+									
+				JSONObject args = new JSONObject();
+				args.put("action", Constants.Action.DELETE.toString());
+				args.put("name", pickedPortalName);
+				String JSONContent = args.toJSONString();
+				
+				message.setContent(JSONContent);
+				
+				Object[] arrayFleet = m_drone.m_fleet.keySet().toArray();
+				
+				for (int i=0; i<m_drone.m_knowPortalsNbDronesAccepted.get(pickedPortalName); i++)
+				{
+					AID droneAID = new AID("Drone" + arrayFleet[arrayFleet.length - i -1], AID.ISLOCALNAME);
+					message.addReceiver(droneAID);
+				}
+				
+				m_drone.send(message);
 			}
 			
-			m_drone.send(message);
 			m_drone.m_destinationPortalName = "";
 			m_drone.m_knownPortalsPositions.remove(pickedPortalName);
 			m_drone.m_knowPortalsNbDronesAccepted.remove(pickedPortalName);
@@ -982,7 +986,14 @@ class ListenAcceptPortalProposal extends Behaviour
 				AID droneAID = new AID("Drone" + arrayFleet[arrayFleet.length - i -1], AID.ISLOCALNAME);
 				message.addReceiver(droneAID);
 			}
-			
+			if (m_drone.m_fleet.size() == portalCapacity) // the exact same number => the master has to go
+			{
+				m_drone.m_state = Constants.State.TRAVELING_TO_PORTAL;
+				System.out.println("drone "+m_drone.m_id+" is traveling");
+				m_drone.m_destinationPortalName = portalName;
+				m_drone.m_portalPassword = portalPassword;
+				m_drone.m_goal = m_drone.m_knownPortalsPositions.get(portalName);
+			}
 			m_drone.send(message);
 		} else
 		{

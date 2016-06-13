@@ -64,8 +64,7 @@ public class Display extends Agent
 		
 		while(portalPlacesToConsume > 0)
 		{
-			 //int places = (int) Math.round(Math.random() * 2) + 2; // 2 or 3 or 4 drones acceptés
-			 int places = 2;
+			 int places = (int) Math.round(Math.random() * 2) + 2; // 2 or 3 or 4 drones acceptés
 			 places = Math.min(places, portalPlacesToConsume);   // pour que le nombre de places allouées ne dépasse pas le nombre de places disponibles
 			 portalPlacesToConsume -= places;	
 			 System.out.println(portalPlacesToConsume);

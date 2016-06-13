@@ -197,7 +197,7 @@ class receiveDrones extends Behaviour
 		{
 			String password = message.getContent();
 			
-			if (password == m_portal.m_password)
+			if (password.equals(m_portal.m_password))
 			{	// on ajoute � la liste des drones ayant donn� le bon pwd pour v�rifier s'ils sont tous arriv�s
 				m_portal.m_inProcedureDrones.add(message.getSender());
 				if (m_portal.m_inProcedureDrones.size() == m_portal.m_nbDronesAccepted)
