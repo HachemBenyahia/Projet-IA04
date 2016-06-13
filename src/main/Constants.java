@@ -1,5 +1,6 @@
 package main;
 
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -63,6 +64,8 @@ public class Constants
 	
 	static boolean m_landingGranted = true;
 	static boolean m_landingRefused = false;
+	
+	static int m_timeToWaitBeforeNextPortalProposal = 4000; // in milli seconds
 	
 	static public void setNumberDrones(int numberDrones)
 	{
@@ -131,5 +134,15 @@ public class Constants
 	public static Long whiteColor()
 	{
 		return new Long((int) Math.pow(2, 32));
+	}
+	
+	static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	static SecureRandom rnd = new SecureRandom();
+
+	public static String randomString(int len){
+	   StringBuilder sb = new StringBuilder( len );
+	   for( int i = 0; i < len; i++ ) 
+	      sb.append( AB.charAt( rnd.nextInt(AB.length()) ) );
+	   return sb.toString();
 	}
 }

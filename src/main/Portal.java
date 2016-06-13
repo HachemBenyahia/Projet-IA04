@@ -3,11 +3,11 @@ package main;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
@@ -103,7 +103,7 @@ class PlacesBroadcast extends TickerBehaviour
 	}
 }
 
-class receiveLandingRequest extends CyclicBehaviour
+class receiveLandingRequest extends Behaviour
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -126,8 +126,9 @@ class receiveLandingRequest extends CyclicBehaviour
 			{
 				m_portal.m_isFree = false;
 				System.out.println("ok JE SUIS FREEEE");
-				m_portal.m_password = message.getConversationId();
+				m_portal.m_password = Constants.randomString(10);
 				reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+				reply.setContent(m_portal.m_password);
 				this.getAgent().send(reply);
 				// d�clenche le timer pour le reset du password
 				this.getAgent().addBehaviour(new ResetPassword(m_portal, Constants.m_passwordResetDelay));
@@ -144,7 +145,10 @@ class receiveLandingRequest extends CyclicBehaviour
 			block();
 		}
 	}
-	
+	public boolean done()
+	{
+		return !m_portal.m_isOpen;
+	}
 }
 
 
@@ -172,7 +176,7 @@ class ResetPassword extends WakerBehaviour
 	}
 }
 
-class receiveDrones extends CyclicBehaviour
+class receiveDrones extends Behaviour
 {
 	private static final long serialVersionUID = 1L;
 	
@@ -211,7 +215,10 @@ class receiveDrones extends CyclicBehaviour
 			block();
 		}
 	}
-	
+	public boolean done()
+	{
+		return !m_portal.m_isOpen;
+	}
 }
 
 
